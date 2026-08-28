@@ -143,7 +143,7 @@ conflict is flagged for human review.
 | Title mode (manual / generated / unresolved), `family_name`, brand/model in titles, OFFICIAL vs strategy | `references/titles-and-family-name.md` |
 | How products get found; what is OFFICIAL vs strategy | `references/seo-and-discovery.md` |
 | Ficha técnica, product identifiers (GTIN / `EMPTY_GTIN_REASON`), structured-first | `references/attributes.md` |
-| Image formats, resolution, per-category limits, per-variant images | `references/images.md` |
+| OFFICIAL image specs vs INTERNAL gallery strategy vs Product Identity Guard; AI-edit safeguards | `references/images.md` |
 | Description structure, plain_text, what to avoid | `references/descriptions.md` |
 | Variations in the new model; migration from `variations[]` | `references/variations-and-user-products.md` |
 | Catalog association, `catalog_product_id`, Buy Box | `references/catalog.md` |
@@ -239,10 +239,14 @@ Follow in order. Each step writes into the draft and can raise audit findings.
     sections; no keyword stuffing, no unproven claims, no invented features.
 11. **Variant strategy** — model the variants per `references/variations-and-user-products.md`;
     per-variant stock, images and (new model) sale conditions/price.
-12. **Image strategy** — OFFICIAL constraints from `references/images.md` (DYNAMIC
-    quantity), then the INTERNAL gallery plan; each image has a commercial job;
-    the correct variant image maps to the correct variant; AI edits must not alter
-    real product identity.
+12. **Image strategy** — keep the three layers of `references/images.md` separate:
+    (A) OFFICIAL ML rules — recommended specs vs hard limits, DYNAMIC per-category
+    count, category-dependent cover-photo rules, moderation stays authoritative;
+    (B) INTERNAL gallery plan — ~8–10 *useful* images is a guideline, not a
+    quota; no filler; (C) **Product Identity Guard** — presentation may change,
+    product identity may not. Run the post-generation identity audit on every
+    generated/edited asset (`IDENTITY_PASS` / `IDENTITY_REVIEW` / `IDENTITY_FAIL`);
+    a generated image is an output, never evidence.
 13. **Return prevention** — run the checklist in `references/return-prevention.md`,
     including the mandatory ambiguity question.
 14. **Compliance** — condition rules, prohibited claims, regulated-category needs,
@@ -299,7 +303,13 @@ statuses:
   title/`family_name`. Title mode merely *unresolved* → REVIEW, not FAIL
   (`references/titles-and-family-name.md` §1).
 - A hardcoded title/`family_name` length used where a DYNAMIC `max_title_length` exists.
-- Images violating an OFFICIAL constraint, or exceeding the category's DYNAMIC max.
+- An image breaking a **confirmed hard** ML rule (unsupported format, below the
+  accepted minimum, over the size cap, over the resolved category max count, or a
+  cover-photo moderation rule for the category), or a **`IDENTITY_FAIL`** —
+  geometry / colour / material / component / variant misrepresented, an invented
+  feature, or an image contradicting ProductMaster (`references/images.md`).
+  Missing an *only-recommended* spec (1200×1200, ~95%, RGB) is a WARNING;
+  `IDENTITY_REVIEW` / commercial-gallery gaps are REVIEW/WARNING, not FAIL.
 - Unanswered "reasonable misinterpretation" question from return prevention.
 
 ### `REVIEW` — no `FAIL` condition, but any of:

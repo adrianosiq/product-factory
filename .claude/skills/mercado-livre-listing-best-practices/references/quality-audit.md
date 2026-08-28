@@ -40,8 +40,11 @@ category/API/publication requirement the listing does not satisfy) → `BLOCKER`
     crafted/sent where the API **generates** it (title mode resolved and
     incompatible), a required generated-title / `family_name` mechanism violated,
     or an invented brand/model in the title/`family_name` (title mode merely
-    *unresolved* → REVIEW); or images breaking an OFFICIAL constraint / the
-    DYNAMIC max;
+    *unresolved* → REVIEW); or an image breaking a **confirmed hard** ML rule
+    (unsupported format, below the accepted minimum, over the size cap, over the
+    resolved category max/min count, or a category cover-photo moderation rule)
+    or a Product Identity Guard `IDENTITY_FAIL` (`images.md`) — an only-recommended
+    spec miss is a WARNING, `IDENTITY_REVIEW` is REVIEW;
   - an unanswered return-prevention "reasonable misinterpretation" question.
 - `REVIEW` — no `FAIL` condition, but any of:
   - ≥1 CRITICAL finding;
@@ -104,6 +107,31 @@ See `titles-and-family-name.md`.
   INTERNAL optimisation is never a BLOCKER unless it protects product truth or a
   confirmed marketplace requirement.
 
+## Image & Product Identity checks (`IMAGES`)
+
+See `images.md` (A OFFICIAL / B INTERNAL gallery / C Product Identity Guard).
+
+- **BLOCKER / FAIL** — an image breaks a confirmed hard ML rule (unsupported
+  format; below the accepted minimum; over the size cap; over the resolved
+  category max, or below a category minimum; a category cover-photo moderation
+  rule — logo/watermark/promo overlay, wrong background for that category); or a
+  Product Identity Guard `IDENTITY_FAIL`: geometry / colour / material / component
+  / condition materially altered, a fabricated feature or accessory shown as
+  included, a generated variant that is not the actual variant, or an image that
+  contradicts ProductMaster.
+- **REVIEW** — `IDENTITY_REVIEW`: source evidence insufficient to verify a
+  generated detail, uncertain colour or scale, a reconstructed angle exposing
+  unseen product areas, or a lifestyle composition that may imply an unsupported
+  inclusion; a required-image / minimum-count rule still pending category/API
+  context.
+- **WARNING / RECOMMENDATION** — a recommended-only spec missed (1200 × 1200,
+  ~95 %, RGB); weak crop; a redundant gallery image; a poor commercial sequence;
+  a missing optional detail shot; below-ideal but acceptable resolution. An
+  internal gallery gap (7 images vs the ~10 target, no lifestyle, no infographic)
+  is a WARNING / score effect, **not** a publication FAIL — unless a category
+  minimum or a critical product-comprehension gap makes it blocking. Marketplace
+  moderation remains authoritative regardless of a local pass.
+
 ## Dimensions (score 0–100 each)
 
 | Dimension | Pass bar | Key checks (see linked file) |
@@ -115,7 +143,7 @@ See `titles-and-family-name.md`.
 | `ATTRIBUTES` | required/new_required/conditional filled; `value_id`s; identifier `KNOWN`/`LEGITIMATELY_ABSENT`/`CONDITIONAL_PENDING`, never invented | `attributes.md`, `categories.md` |
 | `SEARCH_RELEVANCE` | Clear product identity; relevant structured attributes filled; marketplace/customer terminology; no stuffing, no irrelevant terms; title/family consistent with product; no undocumented-ranking folklore scored as fact | `seo-and-discovery.md` |
 | `DESCRIPTION` | `plain_text` valid; complements ficha; no banned content; claims backed | `descriptions.md` |
-| `IMAGES` | OFFICIAL limits; DYNAMIC count; identity unaltered; variant-correct | `images.md` |
+| `IMAGES` | Confirmed hard specs met (format, min size, size cap); count within resolved DYNAMIC max/min; category cover-photo rules; recommended-only specs are WARNINGs; every asset evidence-backed and `IDENTITY_PASS`; variant-correct | `images.md` |
 | `VARIANTS` | Correct model; PARENT_PK/CHILD_PK right; per-variant stock/img; cap respected | `variations-and-user-products.md` |
 | `CONSISTENCY` | No contradictions across the chain below | this file |
 | `RETURN_PREVENTION` | Checklist clean; mandatory question answered "no" | `return-prevention.md` |
