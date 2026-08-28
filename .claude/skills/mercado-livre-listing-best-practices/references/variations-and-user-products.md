@@ -1,7 +1,7 @@
 # Variations, User Products & multi-origin inventory
 
 last_reviewed: 2026-08-27
-source_last_updated: 2026-06-17 (User Products) / 2026 (Preço por variação, Multi-origin stock) — ⚠ verify
+source_last_updated: 2026-06-17 (User Products) / 2026-05-15 (Estoque Multi Origem) / 2026-04-22 (Estoque Distribuído) / 2026-08-14 (Multi-origem FAQ) — ⚠ verify
 volatile: true — highest-churn area of this Skill
 
 Primary Mercado Livre architectural reference for: legacy vs User Products,
@@ -28,6 +28,12 @@ ProductMaster → Product Family → User Product → Item / sale condition → 
 > offered. Stock location = **WHERE** the units are. Keep the three separate:
 > price changes don't change product identity; stock-location changes don't
 > change family identity.
+
+**Publication model ≠ inventory mode.** They are related marketplace contexts but
+separate axes. A User Product can exist *without* Multi Origem stock management —
+`user_product_id` present only means "User Product identity exists"; it does **not**
+by itself force stock-location writes. The **inventory-mode** resolution (§10)
+decides the stock-write mechanism.
 
 ## 2. Publication-model resolution — do this before building any payload
 
@@ -175,57 +181,78 @@ Do not couple price to identity: a price change must not trigger a ProductMaster
 variant-identity change. (Business pricing/margin logic is out of scope —
 `pricing-and-commercial.md`.)
 
-## 10. Inventory model — ownership
+## 10. Inventory mode — the axis that decides the stock-write mechanism
 
-- **New model**: stock belongs to the physical **User Product**, distributed
-  across **stock locations** — not to an arbitrary commercial Item, and not a
-  single `available_quantity` forever.
+The stock-write mechanism is chosen by **inventory mode**, *not* by publication
+model. Legacy vs User Products is the wrong boundary — the real boundary is
+**No Multi Origem vs Multi Origem**.
 
-  ```
-  User Product → Stock → { locations… }
-  ```
+Resolve from the seller tags on `GET /users/$USER_ID` (OFFICIAL — verified
+2026-08-27 search-indexed):
 
-- **Legacy model**: `available_quantity` on the Item / `variations[]` entry
-  remains valid.
+| Mode | Seller tags | Stock write |
+|---|---|---|
+| `STANDARD` | no `warehouse_management` | `PUT /items` with `available_quantity` (where the current model permits). ML synchronises stock across all Items linked to the same `user_product_id` where applicable — so **User Products *without* Multi Origem still use `available_quantity`.** |
+| `MULTI_ORIGIN_SINGLE_WAREHOUSE` | `warehouse_management`, **no** `multiwarehouse` | Warehouse-managed User Product stock, **one** warehouse / network-node context only. `available_quantity` on `/items` must **not** be used. |
+| `MULTI_ORIGIN_MULTIWAREHOUSE` | `warehouse_management` **+** `multiwarehouse` | User Product stock-location resources across **multiple** warehouses (§12). `available_quantity` on `/items` must **not** be used. |
+| `UNRESOLVED` | tags not read | → **REVIEW** (Correction 02A: pending, not `FAIL`). |
+
+- `warehouse_management` **alone means single-warehouse capability**, not "manage
+  multiple warehouses". The `multiwarehouse` tag is what grants multiple
+  warehouses. Migrated multi-origin sellers keep `warehouse_management` and
+  additionally receive `multiwarehouse`.
+- **MLB Multi Origem is officially supported** (Estoque Multi Origem / Estoque
+  Distribuído). Whether a given seller has it **active** is DYNAMIC (read the
+  tags). MLB-specific constraint: a seller's warehouses must be in the **same
+  state as the seller's CNPJ** — warehouses cannot span states in Brazil. (Record
+  only; not a warehouse-registration redesign.)
+- `user_product_id` present ⇒ User Product identity exists; it does **not** imply
+  Multi Origem. Only a resolved `MULTI_ORIGIN_*` mode switches off
+  `available_quantity`.
 - Product Factory keeps its **own** inventory source of truth keyed by internal
   variant / SKU; the marketplace is a projection / execution target, never the
-  master stock (INTERNAL architecture). Inventory identity must not be coupled to
-  ML-specific ids (other marketplaces map from the same internal SKU).
+  master stock (INTERNAL). Inventory identity must not be coupled to ML-specific
+  ids (other marketplaces map from the same internal SKU).
 
-## 11. `available_quantity` — CRITICAL, context-dependent
+## 11. `available_quantity` — valid unless Multi Origem is resolved-active
 
-- **Do NOT state "update `/items` `available_quantity` to synchronise stock" as a
-  universal rule.**
-- For **multi-origin / multiwarehouse** accounts, `available_quantity` **must not
-  be used** as the stock-write mechanism on `/items` — it may be ignored,
-  rejected, or derived from User Product stock. Use the stock-location operations
-  (§12). (OFFICIAL ⚠ verify — verified 2026-08-27 search-indexed.)
-- For **legacy** accounts it remains the write mechanism.
-- Treat Item-level `available_quantity` as **derived / aggregated / non-writable**
-  wherever multi-origin applies. This is why model + stock-mode detection is
-  mandatory.
+- **`STANDARD` mode** (no `warehouse_management`): `PUT /items` with
+  `available_quantity` is the valid stock-write mechanism, per the current
+  publication model's rules. This includes **User Products without Multi
+  Origem** — ML replicates the update across all Items of the same
+  `user_product_id` where applicable.
+- **Resolved `MULTI_ORIGIN_*` mode**: `available_quantity` **must not** be used as
+  the stock-write on `/items` — it may be ignored or rejected. Manage stock via
+  the User Product / location endpoints (§12).
+- Where Multi Origem applies, treat Item-level `available_quantity` as
+  **derived / aggregated**, not a write target.
+- Never state `available_quantity` as "legacy-only" — that boundary is wrong.
+  Resolve inventory mode (§10) first.
 
-## 12. Multi-origin / multiwarehouse (OFFICIAL ⚠ verify — verified 2026-08-27 search-indexed; largely AR/CL docs, MLB support DYNAMIC)
+## 12. Multi Origem — stock-location resources (OFFICIAL — verified 2026-08-27 search-indexed; MLB supported, activation DYNAMIC)
 
-**Stock-mode resolution** (before any stock write):
-`LEGACY ITEM STOCK` / `USER PRODUCT STOCK` / `MULTI-ORIGIN (multiwarehouse)` /
-`UNRESOLVED` → REVIEW.
+Applies once inventory mode = `MULTI_ORIGIN_SINGLE_WAREHOUSE` or
+`MULTI_ORIGIN_MULTIWAREHOUSE`.
 
-- Seller capability tag: **`warehouse_management`** on `GET /users/$USER_ID`.
-  For an activated multiwarehouse seller: publishing goes through
-  **`POST /items/multiwarehouse`**, the payload carries **`stock_locations`**
+- **Publishing with warehouse stock**: sellers tagged `warehouse_management`
+  (+ `multiwarehouse` for more than one warehouse) use
+  **`POST /items/multiwarehouse`**; the payload carries **`stock_locations`**
   (`store_id`, `network_node_id`, `quantity`), `available_quantity` is invalid,
-  and the response returns a **`user_product_id`** that must be persisted for
-  later stock ops.
+  and the response returns a **`user_product_id`** to persist for later stock ops.
 - **Stock-location types** (a UP may hold up to two: `(selling_address` +
   `meli_facility)` **or** `(seller_warehouse` + `meli_facility)`):
-  - **`meli_facility`** — Mercado Livre-managed Fulfillment (Full) stock.
-    Seller API writes to this location are generally **not allowed** — never try
-    to overwrite Full stock directly.
-  - **`seller_warehouse`** — seller-managed; the main multi-origin location type.
-    Write: `PUT /user-products/{user_product_id}/stock/type/seller_warehouse`.
-  - **`selling_address`** — seller origin for non-Fulfillment logistics;
-    **site-dependent** (documented for AR/CL — do not assume MLB support). DYNAMIC.
+  - **`meli_facility`** — Mercado Livre-managed Fulfillment (Full) stock. Seller
+    API writes to this location are **not allowed** — never overwrite Full stock
+    directly.
+  - **`seller_warehouse`** — seller-managed; the location type MLB Multi Origem
+    uses. Write: `PUT /user-products/{user_product_id}/stock/type/seller_warehouse`.
+  - **`selling_address`** — `PUT /user-products/{user_product_id}/stock/type/selling_address`
+    is available **only for MLA and MLC** (the Full/Flex distributed-stock
+    experience). **For MLB, API-managed `selling_address` stock writes are not
+    the supported mechanism in the current distributed-stock flow** — a resolved
+    MLB Multi Origem seller uses the `seller_warehouse` flow. (This concerns the
+    stock-write mechanism; it does not mean `selling_address` never appears in
+    MLB data.)
 - **Read stock**: `GET /user-products/{user_product_id}/stock` → per-location
   `type`, `network_node_id`, `store_id`, `quantity`. Do not treat Item
   `available_quantity` as location-level truth.
@@ -239,7 +266,9 @@ variant-identity change. (Business pricing/margin logic is out of scope —
   the wrong UP / wrong mode / unsupported context. Location creation and
   association must happen before a stock write.
 - **Full + Flex / distributed**: one UP may hold stock across more than one
-  location — do not assume "one User Product = one warehouse".
+  location — do not assume "one User Product = one warehouse". A
+  `MULTI_ORIGIN_SINGLE_WAREHOUSE` seller is still limited to one
+  seller-warehouse / network-node context.
 
 ## 13. Synchronization (OFFICIAL ⚠ verify — verified 2026-08-27 search-indexed)
 
@@ -292,8 +321,14 @@ checks (`quality-audit.md`).
 **BLOCKER → FAIL** (executed / resolved incompatibility):
 - `variations[]` sent for a resolved `USER_PRODUCT` seller/context.
 - Manual `title` sent where the new-model flow generates it.
-- `/items` `available_quantity` written for a resolved multi-origin
-  (`warehouse_management`) account.
+- `/items` `available_quantity` written for a **resolved `MULTI_ORIGIN_*`**
+  inventory mode. (`available_quantity` on a User Product that is *not* Multi
+  Origem is **not** a blocker — it is the correct mechanism.)
+- A `MULTI_ORIGIN_SINGLE_WAREHOUSE` seller (has `warehouse_management`, **no**
+  `multiwarehouse`) sent a request spanning multiple distinct warehouse /
+  network-node contexts.
+- For a resolved MLB Multi Origem seller, an API-managed `selling_address` stock
+  write instead of the `seller_warehouse` flow.
 - Stock assigned to a location that is not the seller's; an invented
   `store_id` / `network_node_id`.
 - Using another variant's `user_product_id`; mixing Items from different UPs.
@@ -304,10 +339,9 @@ checks (`quality-audit.md`).
 - Exceeding the resolved per-UP Item cap or the legacy variation limit.
 
 **REVIEW** (pending / dynamic):
-- Seller model or stock mode `UNRESOLVED`.
+- Publication model or **inventory mode `UNRESOLVED`** (seller tags not read).
 - PK metadata unavailable; a required CHILD_PK requirement pending.
-- Warehouse / location mapping unavailable; site support for a location type
-  unknown.
+- Warehouse / location mapping unavailable.
 - Legacy-vs-UP status uncertain.
 
 Content readiness is separate: a ProductMaster can be **content-ready** while
@@ -316,12 +350,13 @@ the dual-status normalization).
 
 ## 17. Dynamic checks (Correction 02A semantics — pending → REVIEW; executed-unmet → FAIL)
 
-seller tags/capabilities (`user_product_seller`, `warehouse_management`);
-publication model; item model; PK metadata & `read_only` flags; legacy max-
-variation limits; per-UP Item cap; User Product availability for the
-site/category; stock locations & their ids; site support for `selling_address` /
-other location types; current family/UP relationships; whether `available_quantity`
-is writable for this account.
+seller tags/capabilities (`user_product_seller`; `warehouse_management`;
+`multiwarehouse`); publication model; **inventory mode** (`STANDARD` /
+`MULTI_ORIGIN_SINGLE_WAREHOUSE` / `MULTI_ORIGIN_MULTIWAREHOUSE`); item model; PK
+metadata & `read_only` flags; legacy max-variation limits; per-UP Item cap; User
+Product availability for the site/category; stock locations & their ids; site
+scope for the `selling_address` stock-write flow (MLA/MLC only); current family/UP
+relationships.
 
 ## Sources
 
@@ -329,6 +364,8 @@ is writable for this account.
 - Family calculation (PARENT_PK / CHILD_PK / custom / read_only) — Developers "User Products" — verified 2026-08-27 (search-indexed; live 403) — PARENT_PK values identical across family; CHILD_PK & custom contribute id+name only; `read_only` PK excluded; family calc also weighs name/domain/seller/condition.
 - Preço por variação / Price per variation — https://developers.mercadolivre.com.br/pt_br/preco-variacao — Developers — 2026 ⚠ verify — consulted 2026-08-27 — per-Item price/shipping/stock, ~30 sale conditions per UP, rollout in waves, seller-request migration only.
 - Variations (legacy) — https://developers.mercadolivre.com.br/pt_br/variacoes — Developers — verified 2026-08-27 (search-indexed; live 403) — `variations[]` / `attribute_combinations` / `SELLER_SKU` / `picture_ids`; max **100** variations per item (**250** Fashion / Mobile Accessories / Auto Parts), stated 2022-12-14.
-- Multi-Origin Stock / Gestión de stock multiorigen / User Products — https://developers.mercadolibre.com.ar/en_us/multi-origin-stock , https://developers.mercadolibre.com.ar/stock-multiwarehouse — Developers (AR — MLB support DYNAMIC) — verified 2026-08-27 (search-indexed; live 403) — `warehouse_management` tag, `POST /items/multiwarehouse` + `stock_locations` (`store_id`/`network_node_id`/`quantity`), `available_quantity` invalid in multi-origin, `GET/PUT /user-products/{id}/stock[/type/seller_warehouse]`, `GET /users/{id}/stores/search?tags=stock_location`, location types `meli_facility` (ML-managed, no seller write) / `seller_warehouse` / `selling_address` (site-dependent), UP holds up to two typologies, `stock-locations not found` = not initialised (≠ qty 0), Full+Flex coexistence.
+- Estoque Multi Origem — https://developers.mercadolivre.com.br/pt_br/estoque-multi-origem — Developers — updated 2026-05-15; verified 2026-08-27 (search-indexed; live 403) — **MLB supported** (activation DYNAMIC via tags), `warehouse_management` = single warehouse, `+ multiwarehouse` = multiple warehouses; `POST /items/multiwarehouse` + `stock_locations` (`store_id`/`network_node_id`/`quantity`); `available_quantity` not the write mechanism once Multi Origem is active; MLB warehouses must be in the same state as the seller's CNPJ.
+- Estoque Distribuído — https://developers.mercadolivre.com.br/pt_br/estoque-distribuido — Developers — updated 2026-04-22; verified 2026-08-27 (search-indexed; live 403) — `PUT /user-products/{id}/stock/type/selling_address` available for **MLA / MLC only** (Full/Flex distributed experience); without Multi Origem, `PUT /items` `available_quantity` stays valid and ML syncs across Items of the same `user_product_id`; `GET/PUT /user-products/{id}/stock[/type/seller_warehouse]`, `GET /users/{id}/stores/search?tags=stock_location`; `meli_facility` not seller-writable; `stock-locations not found` = not initialised (≠ qty 0); Full+Flex coexistence.
+- Gestão de estoque multiorigem / User Products FAQ — https://developers.mercadolibre.com.ar/stock-multiwarehouse — Developers — updated 2026-08-14; verified 2026-08-27 (search-indexed; live 403) — for sites where `selling_address` modification is blocked (incl. **MLB**) a resolved Multi Origem seller uses the **`seller_warehouse`** flow; a UP holds up to two typologies `(selling_address + meli_facility)` or `(seller_warehouse + meli_facility)`.
 - SELLER_SKU vs seller_custom_field — Developers "Variations / Items & Searches" — verified 2026-08-27 (search-indexed; live 403) — `SELLER_SKU` is the ML-recognised SKU attribute; `seller_custom_field` is seller-internal only, unrelated.
 - Family editor `POST /sites/$SITE/user-products-families/{family_id}/tasks` — Developers — ⚠ verify (path/behaviour not directly confirmed this pass).

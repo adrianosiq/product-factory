@@ -217,12 +217,13 @@ Follow in order. Each step writes into the draft and can raise audit findings.
 6. **Competitor / search intelligence** — optional, if tools available
    (`references/competitor-research.md`, `references/review-mining.md`). Extract
    patterns and buyer objections; never copy content.
-7. **Listing strategy** — resolve the **publication model** first
-   (`LEGACY` / `USER_PRODUCT` / `UNRESOLVED`) from seller tags + item context, and
-   the **stock mode** (`LEGACY ITEM` / `USER PRODUCT` / `MULTI-ORIGIN` /
-   `UNRESOLVED`) before any payload — do not infer the model from variant count
-   (`references/variations-and-user-products.md` §2). Then: how many variants,
-   listing-type intent. Unresolved → dynamic check → REVIEW, not FAIL.
+7. **Listing strategy** — resolve two **independent** axes before any payload
+   (`references/variations-and-user-products.md` §2, §10): the **publication
+   model** (`LEGACY` / `USER_PRODUCT` / `UNRESOLVED`) and the **inventory mode**
+   (`STANDARD` / `MULTI_ORIGIN_SINGLE_WAREHOUSE` / `MULTI_ORIGIN_MULTIWAREHOUSE` /
+   `UNRESOLVED`), both from seller tags + item context. A User Product is not by
+   itself Multi Origem. Do not infer either from variant count. Then: how many
+   variants, listing-type intent. Unresolved → dynamic check → REVIEW, not FAIL.
 8. **`family_name` / title strategy** — first **detect the title mode**
    (`references/titles-and-family-name.md` §1); don't craft a `title` before it is
    known.
@@ -246,8 +247,10 @@ Follow in order. Each step writes into the draft and can raise audit findings.
     keep the internal `variant_id` / SKU stable (ML ids are external mappings to
     persist); resolve `PARENT_PK` / `CHILD_PK` from domain metadata (never
     hardcode); SKU goes in `SELLER_SKU` (not `seller_custom_field`); price is an
-    Item / sale-condition concern in the new model; stock belongs to the User
-    Product / its locations — `/items` `available_quantity` is legacy-only.
+    Item / sale-condition concern in the new model; the stock-write mechanism
+    follows the **inventory mode** — `PUT /items` `available_quantity` in
+    `STANDARD` mode (incl. User Products without Multi Origem), User Product
+    stock-location endpoints once Multi Origem is resolved-active.
 12. **Image strategy** — keep the three layers of `references/images.md` separate:
     (A) OFFICIAL ML rules — recommended specs vs hard limits, DYNAMIC per-category
     count, category-dependent cover-photo rules, moderation stays authoritative;
@@ -314,11 +317,14 @@ statuses:
 - A hardcoded title/`family_name` length used where a DYNAMIC `max_title_length` exists.
 - A **resolved incompatible marketplace write** (`references/variations-and-user-products.md` §16):
   `variations[]` for a resolved `user_product_seller`; `/items` `available_quantity`
-  for a resolved multi-origin (`warehouse_management`) account; another variant's
-  `user_product_id` or Items mixed across User Products; an invented / non-seller
-  stock-location id; an invented or resolved-conflicting `PARENT_PK` / `CHILD_PK`;
-  a required `CHILD_PK` variant value missing after an executed check. Model or
-  stock mode merely *unresolved* → REVIEW, not FAIL.
+  for a resolved **Multi Origem** inventory mode (not a blocker for a User Product
+  that is not Multi Origem); a `MULTI_ORIGIN_SINGLE_WAREHOUSE` seller spanning
+  multiple warehouse/network-node contexts; an MLB `selling_address` stock write
+  instead of `seller_warehouse`; another variant's `user_product_id` or Items
+  mixed across User Products; an invented / non-seller stock-location id; an
+  invented or resolved-conflicting `PARENT_PK` / `CHILD_PK`; a required `CHILD_PK`
+  variant value missing after an executed check. Model or inventory mode merely
+  *unresolved* → REVIEW, not FAIL.
 - An image breaking a **confirmed hard** ML rule (unsupported format, below the
   accepted minimum, over the size cap, over the resolved category max count, or a
   cover-photo moderation rule for the category), or a **`IDENTITY_FAIL`** —

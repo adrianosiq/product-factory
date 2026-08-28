@@ -54,10 +54,12 @@ never Product Factory's own identity.
     **except UPtin**, where Mercado Livre generates `family_name` itself.
 - Reported limit: **max 30 condições de venda (items) per User Product** — exceeding
   it errors. Treat the exact number as DYNAMIC / ⚠ verify.
-- **Stock** belongs to the User Product, distributed across stock locations — not
-  a single Item `available_quantity`. For multi-origin (`warehouse_management`)
-  accounts `available_quantity` on `/items` is **not** the write mechanism
-  (`variations-and-user-products.md` §11–§12).
+- **Stock** write mechanism is set by **inventory mode**, not by the publication
+  model: `STANDARD` (no `warehouse_management`) → `PUT /items`
+  `available_quantity` (ML syncs across a UP's Items) — this includes User
+  Products *without* Multi Origem; resolved **Multi Origem** →
+  User Product stock-location endpoints, `available_quantity` not used
+  (`variations-and-user-products.md` §10–§12).
 - **Title** is auto-generated in the new model — the seller does not send `title`.
 - Rollout: AR/MX from Oct 2024; BR + CO/CL/UY/others gradually from Jan 2025.
   A given seller may already be migrated — confirm via the `user_product_seller`
@@ -84,8 +86,9 @@ never Product Factory's own identity.
   resolved `user_product_seller`).
 - Sending a manual `title` in a resolved UP flow that generates it (BLOCKER;
   unresolved model → REVIEW).
-- Writing `/items` `available_quantity` for a resolved multi-origin
-  (`warehouse_management`) account (BLOCKER).
+- Writing `/items` `available_quantity` for a resolved **Multi Origem** inventory
+  mode (`warehouse_management` present). It is **not** a blocker for a User
+  Product that is not Multi Origem (BLOCKER only in the Multi Origem case).
 - Putting variation-differentiating info only in the title/description instead of
   in `PARENT_PK` / `CHILD_PK` attributes.
 - Different attribute values for the same physical trait across Item vs variation
@@ -98,5 +101,5 @@ never Product Factory's own identity.
 - User Products — Developers — https://developers.mercadolivre.com.br/pt_br/user-products — Developers — updated 2026-06-17 (per requester) — consulted 2026-08-27 — model objects, `family_name`/`title` mapping, UPtin, PARENT_PK grouping.
 - Preço por variação — Developers — https://developers.mercadolivre.com.br/pt_br/preco-variacao — Developers — 2026 — consulted 2026-08-27 — independent offers, per-variant price/stock, 30-item limit, rollout dates.
 - Publicar produtos (guia) — https://developers.mercadolivre.com.br/pt_br/publicacao-de-produtos/ — Developers — ⚠ verify — consulted 2026-08-27 — Item structure, `variations[]`.
-- Multi-Origin Stock / Gestión de stock multiorigen — https://developers.mercadolibre.com.ar/en_us/multi-origin-stock — Developers (AR; MLB support DYNAMIC) — verified 2026-08-27 (search-indexed; live 403) — `warehouse_management`, `stock_locations`, UP-owned stock, `available_quantity` invalid in multi-origin. Full detail in `variations-and-user-products.md`.
+- Estoque Multi Origem / Estoque Distribuído — https://developers.mercadolivre.com.br/pt_br/estoque-multi-origem , https://developers.mercadolivre.com.br/pt_br/estoque-distribuido — Developers — updated 2026-05-15 / 2026-04-22; verified 2026-08-27 (search-indexed; live 403) — **MLB supported** (activation DYNAMIC); `warehouse_management` = single warehouse, `+ multiwarehouse` = multiple; `available_quantity` valid without Multi Origem, not used once Multi Origem is active; `selling_address` stock write is MLA/MLC only. Full detail in `variations-and-user-products.md`.
 - External context only (not authoritative): upseller.com, bling.com.br, ecommercenapratica.com — rollout and model summaries.

@@ -65,10 +65,12 @@ Never phrase a strategy as an ML rule.
 
 ## Stock
 
-- Real stock only. Per-variant in both models. **Which write mechanism** depends
-  on the resolved stock mode — legacy `/items` `available_quantity` vs
-  User-Product / multi-origin stock-location endpoints
-  (`variations-and-user-products.md` §11–§12). Resolve the mode first.
+- Real stock only. Per-variant in both publication models. **Which write
+  mechanism** depends on the resolved **inventory mode**, not the publication
+  model: `PUT /items` `available_quantity` in `STANDARD` mode (incl. User
+  Products without Multi Origem); User Product stock-location endpoints once
+  Multi Origem is resolved-active (`variations-and-user-products.md` §10–§12).
+  Resolve the mode first.
 - Don't publish variants that are permanently out of stock — they hurt the
   listing's quality signals and buyer trust.
 

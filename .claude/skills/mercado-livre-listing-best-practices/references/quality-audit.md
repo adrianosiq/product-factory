@@ -47,11 +47,13 @@ category/API/publication requirement the listing does not satisfy) → `BLOCKER`
     spec miss is a WARNING, `IDENTITY_REVIEW` is REVIEW;
   - a **resolved incompatible marketplace write** (`variations-and-user-products.md`
     §16): `variations[]` for a resolved `user_product_seller`; `/items`
-    `available_quantity` for a resolved multi-origin account; cross-User-Product
-    Item mixing; an invented / non-seller stock-location id; an invented or
-    resolved-conflicting `PARENT_PK`/`CHILD_PK`; a required `CHILD_PK` value
-    missing after an executed check. Model / stock mode merely *unresolved* →
-    REVIEW;
+    `available_quantity` for a resolved **Multi Origem** inventory mode (not a FAIL
+    for a User Product that is not Multi Origem); a `MULTI_ORIGIN_SINGLE_WAREHOUSE`
+    seller spanning multiple warehouse/network nodes; an MLB `selling_address`
+    stock write instead of `seller_warehouse`; cross-User-Product Item mixing; an
+    invented / non-seller stock-location id; an invented or resolved-conflicting
+    `PARENT_PK`/`CHILD_PK`; a required `CHILD_PK` value missing after an executed
+    check. Model / inventory mode merely *unresolved* → REVIEW;
   - an unanswered return-prevention "reasonable misinterpretation" question.
 - `REVIEW` — no `FAIL` condition, but any of:
   - ≥1 CRITICAL finding;
@@ -149,11 +151,18 @@ Procedural (part of `VARIANTS`; feeds `CONSISTENCY`). See
   `FAIL`: the payload definitively uses the incompatible model (e.g. `variations[]`
   for a resolved `user_product_seller`; a manual `title` where the new model
   generates it).
-- **`INVENTORY_MODE`** — `PASS`: the stock mechanism is resolved and correct.
-  `REVIEW`: capability / account / location context pending. `FAIL`: an
-  explicitly incompatible write (e.g. resolved `warehouse_management` +
-  `available_quantity` on `/items`; stock to a non-seller location; invented
-  `store_id` / `network_node_id`).
+- **`INVENTORY_MODE`** — a separate axis from `PUBLICATION_MODEL`. States:
+  `STANDARD` (no `warehouse_management` — `PUT /items` `available_quantity`,
+  including for User Products without Multi Origem) / `MULTI_ORIGIN_SINGLE_WAREHOUSE`
+  (`warehouse_management`, no `multiwarehouse` — one warehouse) /
+  `MULTI_ORIGIN_MULTIWAREHOUSE` (`warehouse_management` + `multiwarehouse`) /
+  `UNRESOLVED`. `PASS`: mode resolved and the stock write matches. `REVIEW`: seller
+  tags not read. `FAIL`: an incompatible write — `available_quantity` on `/items`
+  for a resolved `MULTI_ORIGIN_*` mode; a `MULTI_ORIGIN_SINGLE_WAREHOUSE` seller
+  spanning multiple warehouse/network nodes; an MLB `selling_address` stock write
+  instead of `seller_warehouse`; stock to a non-seller location; an invented
+  `store_id` / `network_node_id`. `available_quantity` on a non-Multi-Origem User
+  Product is **not** a FAIL.
 - **Identity mapping** — internal `variant_id` / SKU is stable and distinct from
   every ML id (`user_product_id`, `family_id`, `item_id`, `variation_id`); each
   returned ML id is persisted; `family_id` is not treated as immutable business
