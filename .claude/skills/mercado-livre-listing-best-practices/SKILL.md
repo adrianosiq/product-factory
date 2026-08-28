@@ -182,7 +182,8 @@ conflict is flagged for human review.
   will succeed or that the content is correct. (OFFICIAL — verified 2026-08-27)
 
 If the API/MCP is unavailable, every dependent decision goes into
-`dynamic_checks_required` and the audit cannot return `PASS`.
+`dynamic_checks_required`. Those checks are **pending**, not failed: the audit is
+`REVIEW` (not `FAIL`) and cannot reach `PASS` until they are executed (§8).
 
 ## 6. Listing creation workflow
 
@@ -242,25 +243,47 @@ conflict is a BLOCKER):
 ProductMaster ⇄ Category ⇄ Catalog ⇄ family_name/Title ⇄ Attributes ⇄ Description ⇄ Images ⇄ Variants
 ```
 
-## 8. Blocking criteria (status = FAIL)
+## 8. Status rules
+
+An unresolved dynamic check has two distinct states; they resolve to different
+statuses:
+
+- **Pending** — the check has not been executed/resolved yet because marketplace
+  context or API data is still missing. This is `REVIEW`, never `FAIL`.
+- **Executed and failed** — the check ran and confirms a mandatory
+  category/API/publication requirement the listing does not satisfy. This is a
+  `BLOCKER` → `FAIL`.
+
+### `FAIL` — any of:
 
 - Any `BLOCKER` finding (e.g. product-data conflict between fields, wrong-variant image, invented GTIN/spec).
-- A **CORE_REQUIRED** ProductMaster gap (§2 A), or a **CONDITIONAL_REQUIRED** gap
-  (§2 B) the category/API confirms mandatory and that is unresolved.
+- A **CORE_REQUIRED** ProductMaster gap (§2 A).
+- A dynamic check that has been **executed** and confirms a mandatory requirement
+  the listing does not satisfy — including a **CONDITIONAL_REQUIRED** field (§2 B)
+  the category/API confirms mandatory and that is unmet.
 - Category not confirmed via predictor, or required/new_required attributes unresolved.
 - Title crafted for a flow where the title is ML-generated, or a hardcoded limit used where a DYNAMIC one exists.
 - Images violating an OFFICIAL constraint, or exceeding the category's DYNAMIC max.
 - Unanswered "reasonable misinterpretation" question from return prevention.
-- `dynamic_checks_required` is non-empty and unresolved.
 
-Missing ProductMaster data does **not** FAIL the draft when it is
-PUBLICATION_REQUIRED (§2 C — a publication-readiness gap) or COMMERCIAL_OPTIONAL
-(§2 D — a WARNING with the matching analysis marked unavailable).
+### `REVIEW` — no `FAIL` condition, but any of:
 
-`REVIEW` = no blockers but ≥1 CRITICAL, a CONDITIONAL_REQUIRED gap still awaiting
-category/API context, or a PUBLICATION_REQUIRED gap.
-`PASS` = no blockers, no CRITICAL, all DYNAMIC checks resolved. Unresolved
-COMMERCIAL_OPTIONAL gaps stay as WARNINGs and do not prevent `PASS`.
+- ≥1 CRITICAL finding.
+- `dynamic_checks_required` is non-empty because a check is still **pending**
+  category/API context (not yet executed) — a CONDITIONAL_REQUIRED gap awaiting
+  that context is here, not in `FAIL`.
+- A **PUBLICATION_REQUIRED** gap (§2 C — a publication-readiness gap).
+
+### `PASS` — all of:
+
+- No `FAIL` condition and no CRITICAL finding.
+- `dynamic_checks_required` is empty: every DYNAMIC check needed for publication
+  has been executed and satisfied.
+- Evidence clean.
+
+Unresolved **COMMERCIAL_OPTIONAL** gaps (§2 D) stay as WARNINGs and never block
+`PASS`. Missing ProductMaster data does not by itself cause `FAIL` when it is
+PUBLICATION_REQUIRED or COMMERCIAL_OPTIONAL.
 
 ## 9. Output format
 

@@ -15,12 +15,34 @@ Final gate. Produces the structured output in `SKILL.md` §9. No publishing.
 
 ## Status rule
 
-- `FAIL` — any BLOCKER, or unresolved `dynamic_checks_required`.
-- `REVIEW` — no BLOCKER but ≥1 CRITICAL, a `CONDITIONAL_REQUIRED` gap still
-  awaiting category/API context, or a `PUBLICATION_REQUIRED` gap.
-- `PASS` — no BLOCKER, no CRITICAL, all DYNAMIC checks resolved, evidence clean.
-  Unresolved `COMMERCIAL_OPTIONAL` gaps stay as WARNINGs and do not prevent
-  `PASS`.
+This mirrors `SKILL.md` §8. An unresolved dynamic check has two distinct states:
+**pending** (not executed yet — marketplace context or API data still missing) →
+`REVIEW`, never `FAIL`; **executed and failed** (ran and confirms a mandatory
+category/API/publication requirement the listing does not satisfy) → `BLOCKER` →
+`FAIL`.
+
+- `FAIL` — any of:
+  - any BLOCKER finding;
+  - a `CORE_REQUIRED` ProductMaster gap (`SKILL.md` §2 A);
+  - a dynamic check that has been **executed** and confirms a mandatory
+    requirement the listing does not satisfy — including a `CONDITIONAL_REQUIRED`
+    field the category/API confirms mandatory and that is unmet;
+  - category not confirmed via predictor, or `required`/`new_required` attributes
+    unresolved;
+  - a hardcoded limit used where a DYNAMIC one exists, an ML-generated-title flow
+    given a crafted title, or images breaking an OFFICIAL constraint / the
+    DYNAMIC max;
+  - an unanswered return-prevention "reasonable misinterpretation" question.
+- `REVIEW` — no `FAIL` condition, but any of:
+  - ≥1 CRITICAL finding;
+  - `dynamic_checks_required` non-empty because a check is still **pending**
+    category/API context (a `CONDITIONAL_REQUIRED` gap awaiting that context is
+    here, not in `FAIL`);
+  - a `PUBLICATION_REQUIRED` gap.
+- `PASS` — all of: no `FAIL` condition and no CRITICAL; `dynamic_checks_required`
+  empty (every DYNAMIC check needed for publication executed and satisfied);
+  evidence clean. Unresolved `COMMERCIAL_OPTIONAL` gaps stay as WARNINGs and
+  never block `PASS`.
 
 ## Missing ProductMaster data — severity by requirement layer
 
@@ -30,7 +52,7 @@ not by field name:
 | Layer | Missing → | Status effect |
 |---|---|---|
 | `CORE_REQUIRED` | BLOCKER | FAIL — product cannot be identified/represented or variants kept distinct. |
-| `CONDITIONAL_REQUIRED` | BLOCKER if the category/API confirms it mandatory; otherwise WARNING + entry in `dynamic_checks_required` until the context resolves | FAIL or REVIEW (conditional). |
+| `CONDITIONAL_REQUIRED` | while the check is **pending** category/API context: WARNING + entry in `dynamic_checks_required`; once the check is **executed** and confirms the field mandatory and unmet: BLOCKER | REVIEW while pending; FAIL once executed-and-unmet. |
 | `PUBLICATION_REQUIRED` | CRITICAL at most — a publication-readiness gap | REVIEW; the hard gate is the separate publish step, not content drafting. |
 | `COMMERCIAL_OPTIONAL` | WARNING, with the matching analysis (e.g. pricing/profitability) marked unavailable | none — PASS still possible. |
 
