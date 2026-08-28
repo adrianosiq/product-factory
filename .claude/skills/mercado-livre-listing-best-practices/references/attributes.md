@@ -21,20 +21,27 @@ comes before and feeds more than the description.)
    *possibly* required; this POST call decides it for the specific item.
 4. Variation attributes (`PARENT_PK` / `CHILD_PK`) — see `categories.md`.
 5. `catalog_required` / `catalog_listing_required` if associating to catalog.
+   Both are real attribute tags (confirmed 2026-08-28, search-indexed); the exact
+   `catalog_required` vs `catalog_listing_required` distinction is still
+   undocumented — treat each as "required for the applicable catalog operation,
+   context-dependent" and do not invent a semantic difference.
 6. **Technical-spec completeness** — `GET /categories/$CATEGORY_ID/technical_specs/input`.
-   These improve completeness / search ranking but are **not** publication
-   blockers: missing them → the `incomplete_technical_specs` tag + a ranking
-   penalty → `QUALITY_STATUS = REVIEW`, `PUBLICATION_STATUS` may still PASS. Do
-   not treat every technical-spec recommendation as a hard requirement.
-   (OFFICIAL — verified 2026-08-27, search-indexed.)
+   An attribute here whose requirement is **not** also carried by `required` in
+   `GET .../attributes` improves completeness / search ranking only: missing it →
+   the `incomplete_technical_specs` tag + a ranking penalty → `QUALITY_STATUS =
+   REVIEW`, `PUBLICATION_STATUS` may still PASS. But the `technical_specs/input`
+   response **can also surface `required` attributes** — decide publication-
+   blocking from the resolved category attribute requirement model
+   (`GET .../attributes` + the conditional check), not from where the attribute
+   appeared. (OFFICIAL — verified 2026-08-27, search-indexed.)
 7. All remaining attributes the ProductMaster supports (recommended + optional).
 
 Requirement vs quality: `required` (in `.../attributes`) missing after category
 resolution → `PUBLICATION_STATUS = FAIL`; `conditional_required` pending → REVIEW,
-executed-and-unmet → FAIL; technical-spec attributes → quality only. Certifications
-/ regulatory data are `CONDITIONAL_REQUIRED` whose *applicability* is a compliance
-question (`compliance.md` §4) — never inferred from generic product type, never
-invented.
+executed-and-unmet → FAIL; a technical-spec attribute that is *not* also
+`required` → `QUALITY_STATUS = REVIEW` only. Certifications / regulatory data are
+`CONDITIONAL_REQUIRED` whose *applicability* is a compliance question
+(`compliance.md` §4) — never inferred from generic product type, never invented.
 
 ## Identity attributes — never invent
 
@@ -178,7 +185,7 @@ For product identifiers, `MISSING` ("we don't know") and `LEGITIMATELY_ABSENT`
 
 ## Sources
 
-- Categorias e Atributos — https://developers.mercadolivre.com.br/pt_br/categorias-e-atributos-veiculos — Developers — ⚠ verify — consulted 2026-08-27.
+- Categories & attributes (generic) — https://developers.mercadolivre.com.br/pt_br/categorias-e-atributos , https://developers.mercadolivre.com.br/en_us/attributes — Developers — SEARCH_INDEXED 2026-08-27 — attribute model, tags (`required` / `new_required` / `conditional_required` / `catalog_required` / `catalog_listing_required`), `technical_specs/input`. (The `…/categorias-e-atributos-veiculos` slug is the vehicles vertical only — use it for auto-parts compatibility, not generic rules.)
 - Identificadores de produtos / Product identifiers — https://developers.mercadolivre.com.br/pt_br/identificadores-de-produtos , https://developers.mercadolivre.com.br/en_us/product-identifiers/ — Developers — verified 2026-08-27 (search-indexed copy; live page 403 to bots) — accepted identifier types (UPC/EAN/JAN/ISBN/ITF-14, Part Number), ISBN-10→13 and UPC-E→UPC-A conversion, GTIN format validated on write, "prioritise GTIN; otherwise send `EMPTY_GTIN_REASON`"; `EMPTY_GTIN_REASON` is `conditional_required`, allowed only when the brand has no GTIN loaded, can flip to required (~30-GTIN threshold ⚠ verify), values read from the category attribute model (example value "Artisanal").
 - Categories & attributes / What is an attribute? — https://developers.mercadolivre.com.br/en_us/categories-attributes , https://developers.mercadolivre.com.br/en_us/attributes — Developers — consulted 2026-08-27 (search-indexed copy; live page returns 403 to bots) — `POST /categories/$ID/attributes/conditional` takes the full item payload and resolves which `conditional_required` attributes apply; `conditional_required` in `GET .../attributes` is only a "possibly required" flag.
 - Códigos universais — https://www.mercadolivre.com.br/codigos-universais — Mercado Livre — ⚠ verify — consulted 2026-08-27.

@@ -59,9 +59,18 @@ cross-links in sibling reference files in the same change.
 
 ## Audit / output contract
 
-`SKILL.md` §9 and `references/quality-audit.md` define the output: a JSON object
-with `status` (`PASS` / `REVIEW` / `FAIL`), 12 dimension scores, and finding
-arrays. Finding severity is `BLOCKER` / `CRITICAL` / `WARNING` / `RECOMMENDATION`;
-each finding also carries a `rule_tag`. `status = FAIL` on any BLOCKER or an
-unresolved `dynamic_checks_required`. Any change to the dimension list, severity
-scale, status rule, or finding shape must be mirrored across both files.
+`SKILL.md` §8–§9 and `references/quality-audit.md` define the output. It carries
+**four independent readiness dimensions** — `content_status`,
+`publication_status`, `execution_status` (each `PASS` / `REVIEW` / `FAIL`) and
+`quality_status` (`PASS` / `REVIEW` only) — plus a **derived compatibility**
+`status` (not the source of truth: `FAIL` if any of content/publication/execution
+is FAIL, else `REVIEW` if any dimension is REVIEW, else `PASS`), the 12 quality
+sub-dimension scores, and finding arrays. Each finding is
+`{ code, severity, affects[], rule_tag, issue, … }`; severity is `BLOCKER` /
+`MAJOR` / `WARNING` / `RECOMMENDATION`. A `BLOCKER` forces its `affects[]`
+dimension(s) to `FAIL`; a `MAJOR` forces them to `REVIEW`. A **pending** dynamic
+check keeps the relevant dimension at `REVIEW` — a non-empty
+`dynamic_checks_required` is **never** an automatic `FAIL`; only a check that has
+been *executed and confirms an incompatibility* fails its dimension. Any change
+to the dimension list, status states, severity scale, aggregation rule, or
+finding shape must be mirrored across `SKILL.md` and `references/quality-audit.md`.

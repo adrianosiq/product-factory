@@ -199,8 +199,10 @@ conflict is flagged for human review.
 - `GET /item/$ITEM_ID/performance` — post-publication listing-quality signal
   (score, `level_wording`, `OPPORTUNITY`/`WARNING` entities). **Replaces the
   deprecated `/health`.** Feeds `QUALITY_STATUS` only.
-- `GET /moderations/last_moderation` and `/infractions` — post-publication
-  marketplace enforcement state (`reason` + `remedy`; `active`/`paused`/`inactive`).
+- `GET /moderations/last_moderation/{ref}` (ref = `<element_id>-ITM`) and
+  `GET /moderations/infractions/{USER_ID}` — post-publication enforcement state
+  (`reason` + `remedy`; infraction states `forbidden`/`waiting_for_patch`/`held`/
+  `pending_documentation`, distinct from the Item's `active`/`paused`/`inactive`).
   "No moderation" ≠ compliant. (`references/compliance.md`)
 
 If the API/MCP is unavailable, every dependent decision goes into
@@ -292,21 +294,24 @@ Follow in order. Each step writes into the draft and can raise audit findings.
 ## 7. Audit workflow
 
 The audit produces **four independent readiness dimensions** — `CONTENT_STATUS`,
-`PUBLICATION_STATUS`, `EXECUTION_STATUS`, `QUALITY_STATUS` (each `PASS` / `REVIEW`
-/ `FAIL`) — plus 0–100 scores for the twelve quality sub-dimensions that feed
-mainly `QUALITY_STATUS` (and `PUBLICATION_STATUS` where a check is a hard rule):
+`PUBLICATION_STATUS`, `EXECUTION_STATUS` (each `PASS` / `REVIEW` / `FAIL`) and
+`QUALITY_STATUS` (`PASS` / `REVIEW` only — §8) — plus 0–100 scores for the twelve
+quality sub-dimensions that feed mainly `QUALITY_STATUS` (and `PUBLICATION_STATUS`
+where a check is a hard rule):
 
 `PRODUCT_ACCURACY`, `CATEGORY`, `CATALOG`, `FAMILY_NAME_TITLE`, `ATTRIBUTES`,
 `SEARCH_RELEVANCE`, `DESCRIPTION`, `IMAGES`, `VARIANTS`, `CONSISTENCY`,
 `RETURN_PREVENTION`, `COMPLIANCE`.
 
-Findings carry `severity` (`BLOCKER` / `CRITICAL` / `WARNING` / `RECOMMENDATION`)
-and `affects: [ CONTENT | PUBLICATION | EXECUTION | QUALITY ]`. `BLOCKER` is a
-finding severity that forces its named dimension(s) to `FAIL` — it is not a
-status. See `references/quality-audit.md` for the full model and aggregation.
+Findings carry `severity` (`BLOCKER` / `MAJOR` / `WARNING` / `RECOMMENDATION`) and
+`affects: [ CONTENT | PUBLICATION | EXECUTION | QUALITY ]`. Severity is not a
+status: a `BLOCKER` forces its `affects[]` dimension(s) to `FAIL`; a `MAJOR`
+forces them to `REVIEW`; a `WARNING` is normally non-blocking (`QUALITY_STATUS =
+REVIEW` at most); a `RECOMMENDATION` has no status effect. See
+`references/quality-audit.md` for the full model and aggregation.
 
-Cross-consistency check is mandatory (any mismatch is at least CRITICAL, a data
-conflict is a BLOCKER):
+Cross-consistency check is mandatory (any mismatch is at least `MAJOR`, a data
+conflict is a `BLOCKER`):
 
 ```
 ProductMaster ⇄ Category ⇄ Catalog ⇄ family_name/Title ⇄ Attributes ⇄ Description ⇄ Images ⇄ Variants
@@ -314,24 +319,29 @@ ProductMaster ⇄ Category ⇄ Catalog ⇄ family_name/Title ⇄ Attributes ⇄ 
 
 ## 8. Readiness status model
 
-Four **independent** dimensions, each `PASS` / `REVIEW` / `FAIL`
-(`references/quality-audit.md` §1). They answer different questions and do **not**
-collapse into one status.
+Four **independent** dimensions (`references/quality-audit.md` §1). They answer
+different questions and do **not** collapse into one status. `CONTENT_STATUS`,
+`PUBLICATION_STATUS` and `EXECUTION_STATUS` are `PASS` / `REVIEW` / `FAIL`.
+`QUALITY_STATUS` is **`PASS` / `REVIEW` only** — a defect severe enough to make
+the listing misleading, unsafe or factually wrong is routed to `CONTENT_STATUS`
+and/or `PUBLICATION_STATUS`; a marketplace state that blocks an operation is
+routed to `EXECUTION_STATUS`. Quality never FAILs.
 
 | Dimension | PASS when | Key FAIL conditions (all require a **confirmed** condition) |
 |---|---|---|
-| **`CONTENT_STATUS`** — can we generate truthful content? | product identity + CORE_REQUIRED (§2 A) + variant identities established; no material contradiction; nothing must be invented | core identity/function unknown; conflicting evidence on what is sold; a core variant identity unestablished; content needs a fabricated material fact; `IDENTITY_FAIL` on a depended-on asset; an essential unsupported claim that can't be dropped |
-| **`PUBLICATION_STATUS`** — does it meet resolved ML requirements? | every currently-resolved mandatory publication requirement satisfied | resolved `required` attribute missing; `listing_allowed = false`; confirmed required identifier absent w/o `EMPTY_GTIN_REASON`; resolved `USER_PRODUCT` flow given `variations[]` or a forbidden manual `title`; image over a confirmed hard limit / below the accepted minimum; resolved catalog-only domain given a marketplace-only publication; `/items/validate` confirmed **error**; confirmed prohibited product; confirmed applicable regulated requirement with missing evidence; missing `SELLER_PACKAGE_*` in a resolved ME2 context |
-| **`EXECUTION_STATUS`** — can we run the op for this seller/context now? | auth + seller tags + publication model + inventory mode + external mappings resolved and compatible | Multi Origem account writing `/items` `available_quantity`; non-seller / invented stock location; incompatible publication model; operation prohibited by current moderation state; needed API capability absent; a permanently-inactive listing required; attempted publish of a confirmed prohibited product |
-| **`QUALITY_STATUS`** — how complete/optimised beyond bare validity? | no known material quality deficiency | *rare* — a defect severe enough to make the listing misleading/unsafe, or a confirmed hard moderation state. Most quality gaps are **REVIEW**, not FAIL |
+| **`CONTENT_STATUS`** — can we generate truthful content? | product identity + CORE_REQUIRED (§2 A) + variant identities established; no material contradiction; nothing must be invented | core identity/function unknown; conflicting evidence on what is sold; a core variant identity unestablished; content needs a fabricated material fact; content materially represents a *different* product; `IDENTITY_FAIL` where truthful representation is impossible; an essential unsupported claim that can't be dropped. **A removable policy string (contact info, external link — §compliance) is *not* a `CONTENT_STATUS` failure: drop it, `CONTENT_STATUS` may stay `PASS`.** |
+| **`PUBLICATION_STATUS`** — does it meet resolved ML requirements? | every currently-resolved mandatory publication requirement satisfied | resolved `required` attribute missing; `listing_allowed = false`; confirmed required identifier absent w/o `EMPTY_GTIN_REASON`; resolved `USER_PRODUCT` flow given `variations[]` or a forbidden manual `title`; image over a confirmed hard limit / below the accepted minimum; resolved catalog-only domain given a marketplace-only publication; `/items/validate` confirmed **error**; confirmed prohibited product; confirmed applicable regulated requirement with missing evidence; missing `SELLER_PACKAGE_*` in a resolved ME2 context; the assembled payload still carries prohibited contact / external-diversion content at publish time |
+| **`EXECUTION_STATUS`** — can we run **the target operation** for this seller/context now? Evaluated **per operation** (create listing, update listing, update price, update stock, fetch performance, handle moderation — each has its own prerequisites) | the prerequisites *of that operation* are resolved and compatible. An external id/mapping is a prerequisite **only for an operation that consumes it** — an initial create does **not** require a `user_product_id` it will itself return. | Multi Origem account writing `/items` `available_quantity`; non-seller / invented stock location; incompatible publication model; operation prohibited by current moderation state; needed API capability absent; a permanently-inactive listing required by the operation; attempted publish of a confirmed prohibited product |
+| **`QUALITY_STATUS`** — completeness / optimisation beyond bare validity | no material quality / optimisation finding | *(no FAIL state)* — a material quality, completeness, SEO/discoverability, image, technical-spec or `/performance` finding → `REVIEW` |
 
-**Pending vs executed (Correction 02A, unchanged):** a dynamic check *pending* →
-`REVIEW`; *executed and confirms a mandatory incompatibility* → `BLOCKER` →
-`FAIL`. **Never FAIL because something has not been checked.**
+**Pending vs executed (unchanged):** a dynamic check *pending* → `REVIEW`;
+*executed and confirms a mandatory incompatibility* → `BLOCKER` → `FAIL`.
+**Never FAIL because something has not been checked** — a non-empty
+`dynamic_checks_required` is never an automatic FAIL.
 
 **Aggregation, per dimension:** any applicable BLOCKER / confirmed FAIL → `FAIL`;
-else any applicable REVIEW / CRITICAL → `REVIEW`; else `PASS`. Warnings alone
-keep CONTENT / PUBLICATION / EXECUTION at `PASS`; a **material** warning →
+else any applicable REVIEW / `MAJOR` → `REVIEW`; else `PASS`. Warnings alone keep
+CONTENT / PUBLICATION / EXECUTION at `PASS`; a **material** warning →
 `QUALITY_STATUS = REVIEW`. `COMMERCIAL_OPTIONAL` gaps (§2 D) are WARNINGs only.
 
 **Requirement type ≠ evidence state ≠ readiness.** §2 layers say *what kind of
@@ -340,8 +350,8 @@ this section says *is the dimension ready*. Three separate axes — a finding na
 its `affects: [ … ]` dimension(s).
 
 **Derived compatibility `status`** (backward-compat only, not the source of
-truth): `FAIL` if any of CONTENT/PUBLICATION/EXECUTION = FAIL; else `REVIEW` if
-any dimension = REVIEW; else `PASS`.
+truth): `FAIL` if any of CONTENT / PUBLICATION / EXECUTION = FAIL; else `REVIEW`
+if **any** dimension (including `QUALITY_STATUS`) = REVIEW; else `PASS`.
 
 **Gates:** content generation → `CONTENT_STATUS = PASS` (the others may be
 `REVIEW`). Publication → CONTENT + PUBLICATION + EXECUTION all `PASS`
@@ -358,7 +368,8 @@ approval can resolve REVIEW but never overrides a confirmed OFFICIAL prohibition
   "content_status": "PASS | REVIEW | FAIL",
   "publication_status": "PASS | REVIEW | FAIL",
   "execution_status": "PASS | REVIEW | FAIL",
-  "quality_status": "PASS | REVIEW | FAIL",
+  "execution_operation": "the target operation EXECUTION_STATUS was evaluated for (e.g. CREATE_LISTING, UPDATE_STOCK) — free text",
+  "quality_status": "PASS | REVIEW",
   "status": "PASS | REVIEW | FAIL",
   "status_note": "derived compatibility status — read the four dimensions instead",
   "scores": {
@@ -367,7 +378,7 @@ approval can resolve REVIEW but never overrides a confirmed OFFICIAL prohibition
     "variants": 0, "consistency": 0, "return_prevention": 0, "compliance": 0
   },
   "blockers": [],
-  "critical": [],
+  "major": [],
   "warnings": [],
   "recommendations": [],
   "compliance_findings": [],
@@ -377,9 +388,9 @@ approval can resolve REVIEW but never overrides a confirmed OFFICIAL prohibition
 }
 ```
 
-Each finding: `{ "code", "dimension", "severity": "BLOCKER|CRITICAL|WARNING|RECOMMENDATION", "affects": ["CONTENT"|"PUBLICATION"|"EXECUTION"|"QUALITY"], "issue", "evidence", "fix", "rule_tag": "OFFICIAL|DYNAMIC|INTERNAL|EXPERIMENTAL|LEARNED", "source" }`. Every `BLOCKER` states what failed, `affects`, evidence/source and a remedy; every REVIEW states what resolves it.
+Each finding: `{ "code", "dimension", "severity": "BLOCKER|MAJOR|WARNING|RECOMMENDATION", "affects": ["CONTENT"|"PUBLICATION"|"EXECUTION"|"QUALITY"], "issue", "evidence", "fix", "rule_tag": "OFFICIAL|DYNAMIC|INTERNAL|EXPERIMENTAL|LEARNED", "source" }`. `BLOCKER` → its `affects[]` dimension(s) `FAIL`; `MAJOR` → `REVIEW`. Every `BLOCKER` states what failed, `affects`, evidence/source and a remedy; every REVIEW states what resolves it.
 
-Each `compliance_finding`: `{ "rule", "source", "classification": "OFFICIAL|DYNAMIC|INTERNAL|UNVERIFIED", "scope", "evidence", "status": "PASS|REVIEW|FAIL", "affects": ["CONTENT"|"PUBLICATION"|"EXECUTION"], "remedy" }` (`references/compliance.md`).
+Each `compliance_finding`: `{ "rule", "source", "classification": "OFFICIAL|DYNAMIC|INTERNAL|UNVERIFIED", "scope", "evidence", "status": "PASS|REVIEW|FAIL", "affects": ["CONTENT"|"PUBLICATION"|"EXECUTION"], "remedy" }` (`references/compliance.md`). `affects` is an array — a finding may touch more than one dimension.
 
 Each `missing_information` entry: `{ "field", "requirement_type": "CORE_REQUIRED|CONDITIONAL_REQUIRED|PUBLICATION_REQUIRED|COMMERCIAL_OPTIONAL", "reason", "blocks_content": true|false }` (§2). COMMERCIAL_OPTIONAL entries always have `blocks_content: false`.
 
