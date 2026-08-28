@@ -6,6 +6,20 @@ volatile: true
 This Skill does not set the final price — that's a business decision. It ensures
 the commercial setup is coherent, competitive-aware and correctly classified.
 
+## Missing commercial inputs are not a content blocker
+
+- Acquisition/landed cost, target margin and target price are
+  **COMMERCIAL_OPTIONAL** (`SKILL.md` §2 D). If they are absent, still produce the
+  full listing content (title/family, attributes, description, image strategy) and
+  emit `WARNING — pricing/profitability analysis unavailable`. Never FAIL or
+  block the draft for a missing cost or margin.
+- Price, currency and listing type are **PUBLICATION_REQUIRED** (`SKILL.md` §2 C):
+  a gap there is a publication-readiness gap (`REVIEW`), resolved before the
+  separate publish step, not during content drafting.
+- Stock / availability and handling time are PUBLICATION_REQUIRED for the offer,
+  but real per-variant stock is also needed to decide whether to model a variant
+  at all (see below and `variations-and-user-products.md`).
+
 ## Classify every commercial statement
 
 | Class | Example |

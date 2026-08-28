@@ -16,8 +16,27 @@ Final gate. Produces the structured output in `SKILL.md` §9. No publishing.
 ## Status rule
 
 - `FAIL` — any BLOCKER, or unresolved `dynamic_checks_required`.
-- `REVIEW` — no BLOCKER but ≥1 CRITICAL, or `missing_information` affecting accuracy.
+- `REVIEW` — no BLOCKER but ≥1 CRITICAL, a `CONDITIONAL_REQUIRED` gap still
+  awaiting category/API context, or a `PUBLICATION_REQUIRED` gap.
 - `PASS` — no BLOCKER, no CRITICAL, all DYNAMIC checks resolved, evidence clean.
+  Unresolved `COMMERCIAL_OPTIONAL` gaps stay as WARNINGs and do not prevent
+  `PASS`.
+
+## Missing ProductMaster data — severity by requirement layer
+
+Layers are defined in `SKILL.md` §2. Missing input maps to severity by its layer,
+not by field name:
+
+| Layer | Missing → | Status effect |
+|---|---|---|
+| `CORE_REQUIRED` | BLOCKER | FAIL — product cannot be identified/represented or variants kept distinct. |
+| `CONDITIONAL_REQUIRED` | BLOCKER if the category/API confirms it mandatory; otherwise WARNING + entry in `dynamic_checks_required` until the context resolves | FAIL or REVIEW (conditional). |
+| `PUBLICATION_REQUIRED` | CRITICAL at most — a publication-readiness gap | REVIEW; the hard gate is the separate publish step, not content drafting. |
+| `COMMERCIAL_OPTIONAL` | WARNING, with the matching analysis (e.g. pricing/profitability) marked unavailable | none — PASS still possible. |
+
+A field being *present* is never evidence; a field being *absent* (`MISSING`) is
+distinct from a field carrying an *unsupported* claim (`UNSUPPORTED`) — see
+`attributes.md` §evidence.
 
 ## Dimensions (score 0–100 each)
 
@@ -71,7 +90,9 @@ Emit the `SKILL.md` §9 JSON plus the listing draft (model, `category_id`,
 image plan with roles + variant mapping). Populate:
 
 - `dynamic_checks_required` — every DYNAMIC value not confirmed via API this run.
-- `missing_information` — every MISSING ProductMaster field that mattered.
+- `missing_information` — every ProductMaster gap that mattered, each as
+  `{ "field", "requirement_type", "reason", "blocks_content" }` (`SKILL.md` §2).
+  COMMERCIAL_OPTIONAL gaps appear here with `blocks_content: false`.
 - `sources_used` — the reference files and any live docs/API endpoints consulted.
 
 Then stop at **READY FOR REVIEW**.
