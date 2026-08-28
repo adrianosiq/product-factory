@@ -30,10 +30,12 @@ ComplianceFinding {
   scope               # product type / category / claim / media / seller
   evidence            # what supports or refutes applicability
   status              # PASS | REVIEW | FAIL
-  affected_dimension  # CONTENT | PUBLICATION | EXECUTION  (see §8)
+  affects[]           # CONTENT | PUBLICATION | EXECUTION  (one finding may touch several — see §8)
   remedy?             # the action that resolves it
 }
 ```
+
+`affects` is an **array** and mirrors the general finding field (`SKILL.md` §9).
 
 Compliance is **not** a fifth readiness status — findings feed the existing
 dimensions (`SKILL.md` §8).
@@ -50,6 +52,14 @@ product type → policy resolution → allowed | restricted/conditional | prohib
 | `restricted / conditional` | Publication needs a specific category, authorization, certification, seller eligibility, special attributes, or legal conditions. | **REVIEW** until satisfied; **PUBLICATION_STATUS = FAIL** once a condition is confirmed applicable and unmet. |
 | `prohibited` | A confirmed policy forbids sale/publication. | **PUBLICATION_STATUS = FAIL** (and **EXECUTION_STATUS = FAIL** for an attempted publish). |
 | `unresolved` | Policy check not executed / evidence insufficient, **and** the product category reasonably requires a determination. | **REVIEW**. |
+
+A confirmed **prohibited** product may still have **`CONTENT_STATUS = PASS`** —
+its product facts can be fully known and its description truthful. The prohibition
+is a *marketplace-permission* failure, not a *product-truth* failure. Primary
+impact: `PUBLICATION_STATUS = FAIL`, and for an attempted publish
+`EXECUTION_STATUS = FAIL`. Only fail `CONTENT_STATUS` if the content *itself*
+carries a truth / evidence problem (e.g. it asserts an unsupported authenticity
+or authorisation claim).
 
 - Do **not** hardcode a giant permanent prohibited list — cite the live policy
   pages and resolve per product. (OFFICIAL policy surfaces: "Produtos proibidos",
@@ -123,9 +133,27 @@ Where confirmed by current ML moderation policy, listing content must not carry
 phone / WhatsApp / e-mail / external website / social profile / off-marketplace
 payment / external purchase CTA / QR codes. (`descriptions.md` and `images.md`
 already forbid this in their surfaces — this is the policy anchor.) Do not
-universalise exact prohibited formats without current official evidence; a
-confirmed violation → **CONTENT_STATUS = FAIL** (the copy must be corrected
-before publishing).
+universalise exact prohibited formats without current official evidence.
+
+**Readiness impact.** Such a string is a *removable* content-policy violation, not
+a product-truth failure — the product facts are still known:
+
+```
+prohibited contact / diversion string detected
+        ↓
+remove it from the generated content
+        ↓
+CONTENT_STATUS may remain PASS   +   record a compliance/content finding
+        ↓
+if the assembled payload still contains it at publish time
+        ↓
+PUBLICATION_STATUS = FAIL   (optionally QUALITY_STATUS = REVIEW while pending)
+```
+
+Do **not** treat a removable policy string as a `CONTENT_STATUS` failure — that
+is reserved for a genuine truth / evidence problem (core identity unknown,
+material fact conflict, essential claim needs fabrication, the content represents
+a different product, Product Identity Guard failure).
 
 ## 8. Moderation — post-publication marketplace state
 
@@ -133,24 +161,40 @@ Publication success is **not** permanent compliance. A listing can later be
 moderated: `active` with exposure loss, `paused`/reviewable, or `inactive`/
 non-recoverable. Read state from the moderation APIs — never assume "no
 moderation found" means a new payload is compliant (absence of enforcement ≠
-approval; §53 of the correction brief).
+approval). A successful `/items/validate` and a successful publication are also
+not compliance approval.
+
+**Endpoints** (verified 2026-08-28, search-indexed; live 403):
+
+- `GET /moderations/last_moderation/{MODERATION_REFERENCE_ID}` — the last
+  moderation for one element. `MODERATION_REFERENCE_ID = <element_id>-<element_type>`
+  (suffix `-ITM` for a listing; `-QUE` question, `-REV` review). **Not**
+  `GET /moderations/last_moderation` on its own.
+- `GET /moderations/infractions/{USER_ID}` — the seller's infraction history
+  (query params: `related_item_id`, `element_id`, `element_type`, date range,
+  language, pagination, sort). **Not** a top-level `GET /infractions`.
 
 ```
 ModerationFinding {
-  type            # moderation group (contact/links, brand protection,
-                  #   prohibited product, image quality, incomplete_technical_specs,
-                  #   catalog restriction, vertical-specific, …)
-  status          # active | paused | inactive
-  reason          # ML text (HTML) — preserve verbatim
-  remedy          # ML text — only present when recoverable; preserve
-  recoverable?    # derive from presence of remedy + status
-  source          # /moderations/last_moderation | /infractions
+  type              # moderation group (contact/links, brand protection,
+                    #   prohibited product, image quality, incomplete_technical_specs,
+                    #   catalog restriction, vertical-specific, …)
+  item_status       # the Item's own state: active | paused | inactive
+  infraction_state  # forbidden (final) | waiting_for_patch | held | pending_documentation (temporary)
+  reason            # ML text (HTML) — preserve verbatim
+  remedy            # ML text — only present when recoverable; preserve; do not fabricate
+  recoverable?      # derive from presence of remedy + infraction_state
+  source            # /moderations/last_moderation/{ref} | /moderations/infractions/{user}
   observed_at
 }
 ```
 
-Preserve **both** `reason` and `remedy` — never reduce moderation to
-`moderated = true`.
+**Item state ≠ moderation/infraction state.** `active` / `paused` / `inactive`
+describe the *Item*; `forbidden` / `waiting_for_patch` / `held` /
+`pending_documentation` describe the *infraction*. A moderation finding can drive
+consequences for the Item, but they are separate fields. Preserve **both**
+`reason` and `remedy` — never reduce moderation to `moderated = true`; where
+`remedy` is absent for a non-recoverable condition, do not invent one.
 
 | Observed state | Typical mapping (inspect reason/remedy first — do not apply blindly) |
 |---|---|
@@ -213,7 +257,7 @@ trigger REVIEW; it never creates an OFFICIAL FAIL on its own.
 - Conteúdos que infrinjam a propriedade intelectual — https://www.mercadolivre.com.br/ajuda/1078 ; Propriedade roubada / Produtos fora do comércio — https://www.mercadolivre.com.br/ajuda/Propriedade-roubada_1034 — Central de Ajuda — ⚠ verify (search-indexed 2026-08-27).
 - Como cumprir as normas da ANVISA — https://vendedores.mercadolivre.com.br/nota/como-cumprir-as-normas-da-anvisa-e-evitar-o-cancelamento-do-seu-anuncio — Central de Vendedores — ⚠ verify (search-indexed 2026-08-27) — regulated-product compliance example.
 - Brand Protection Program — https://www.mercadolivre.com.br/ajuda/Programa-de-Prote%C3%A7ao-Propriedade-Intelectual_2099 , https://www.mercadolivre.com.br/brandprotection/enforcement — ⚠ verify (search-indexed 2026-08-27) — rights-holder report + seller response (4 calendar days; licence doc PDF/PNG/JPG ≤ 5 MB); no reply → auto-removal.
-- Manage moderations / `/moderations/last_moderation` / `/infractions` — https://developers.mercadolivre.com.br/en_us/manage-moderations — Developers — verified 2026-08-27 (search-indexed; live 403) — `reason` (HTML) always present; `remedy` (HTML) only when recoverable; statuses `active` / `paused` / `inactive`; ML also pauses preventively (unusual price change, items without sales, image-by-URL not yet processed); `/infractions` covers items/questions/answers/reviews.
+- Manage moderations — https://developers.mercadolivre.com.br/en_us/manage-moderations — Developers — verified 2026-08-28 (search-indexed; live 403) — `GET /moderations/last_moderation/{MODERATION_REFERENCE_ID}` (`<element_id>-<element_type>`, suffix `-ITM` / `-QUE` / `-REV`); `GET /moderations/infractions/{USER_ID}` (query: `related_item_id`, `element_id`, `element_type`, dates, language, pagination, sort). `reason` (HTML) always; `remedy` (HTML) only when recoverable. Infraction states `forbidden` (final) / `waiting_for_patch` / `held` / `pending_documentation` (temporary) — distinct from the Item's `active` / `paused` / `inactive`. ML also pauses preventively (unusual price change, items without sales, image-by-URL not yet processed).
 - Qualidade das publicações / listing `/performance` — https://developers.mercadolivre.com.br/pt_br/qualidade-das-publicacoes — Developers — verified 2026-08-27 (search-indexed; live 403) — **`/health` discontinued, replaced by `GET /item/$ITEM_ID/performance`**; response `level_wording` (per site), entities `mode` = `OPPORTUNITY` (improve) or `WARNING` (issue reducing score).
 - Catalog required listings / `catalog_only_restricted` — https://developers.mercadolivre.com.br/pt_br/publicacoes-necessarias-do-catalogo , https://developers.mercadolivre.com.br/en_us/catalog-eligibility — Developers — verified 2026-08-27 (search-indexed; live 403) — catalog-exclusive domains: marketplace publication moderated `under_review` with `catalog_only_restricted`; catalog-required: `catalog_listing_eligible` + product `listing_strategy: catalog_required` → moderated `opt_obey`; applies to MLB.
 - Validador de publicações (`POST /items/validate`) — see `official-sources.md` — a pre-publication technical check, **not** a compliance certification or moderation pre-clearance.

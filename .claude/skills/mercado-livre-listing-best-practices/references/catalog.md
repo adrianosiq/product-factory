@@ -29,7 +29,8 @@ levers and on making sure you're linked to the **correct** catalog product.
 ## Decision flow (run at workflow step 4, before writing content)
 
 1. Search the catalog for the product (GTIN, brand+model, key attributes):
-   `GET /products/search` / domain catalog search → candidate `catalog_product_id`.
+   `GET /products/search?site_id=MLB&q=...` (`site_id` required; also
+   `GET /marketplace/products/search`) → candidate `catalog_product_id`.
 2. **Exact match found?**
    - Yes → recommend **associating to catalog**. Verify the match is truly the
      same product (same model, capacity, color scope, edition). A near-match is a

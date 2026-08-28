@@ -2,11 +2,13 @@
 
 last_reviewed: 2026-08-27
 fetch_method_note: >-
-  Direct fetch of developers.mercadolivre.com.br and vendedores.mercadolivre.com.br
-  was blocked (HTTP 403 bot protection) when this Skill was authored. Content below
-  is reconstructed from search-engine summaries of those official pages plus dates
-  provided by the requester. Every rule derived from these pages is tagged
-  "⚠ verify" until a maintainer re-reads the live page.
+  developers.mercadolivre.com.br, vendedores.mercadolivre.com.br and
+  www.mercadolivre.com.br/ajuda all return HTTP 403 to bots — **no page in this
+  file has been read live.** Each row carries an explicit verification quality:
+  LIVE (read directly — none yet); SEARCH_INDEXED (corroborated against
+  search-engine copies of the official page, with a date); UNVERIFIED / "⚠ verify"
+  (not corroborated — treat as provisional and confirm before relying on it).
+  A SEARCH_INDEXED rule is not LIVE and may still be stale; re-check per SKILL.md §5.
 
 ## Priority order for sources
 
@@ -31,7 +33,8 @@ rule solely on LLM prior knowledge.
 | Estoque Distribuído | https://developers.mercadolivre.com.br/pt_br/estoque-distribuido | updated 2026-04-22; verified 2026-08-27 (search-indexed; live 403) — without Multi Origem, `PUT /items` `available_quantity` valid (ML syncs across a UP's Items); `selling_address` stock write (`PUT /user-products/{id}/stock/type/selling_address`) **MLA/MLC only**; `GET/PUT /user-products/{id}/stock[/type/seller_warehouse]`; `GET /users/{id}/stores/search?tags=stock_location`; `meli_facility` not seller-writable | variations-and-user-products, product-structure |
 | Gestão de estoque multiorigem / User Products FAQ | https://developers.mercadolibre.com.ar/stock-multiwarehouse | updated 2026-08-14; verified 2026-08-27 (search-indexed; live 403) — sites where `selling_address` modification is blocked (incl. **MLB**) use the `seller_warehouse` flow; UP holds up to two typologies `(selling_address + meli_facility)` or `(seller_warehouse + meli_facility)` | variations-and-user-products |
 | SELLER_SKU vs seller_custom_field | https://developers.mercadolibre.com.ar/en_us/variations | verified 2026-08-27 (search-indexed; live 403) — `SELLER_SKU` is the ML-recognised SKU attribute; `seller_custom_field` is seller-internal, unrelated | variations-and-user-products |
-| Categorias e Atributos | https://developers.mercadolivre.com.br/pt_br/categorias-e-atributos-veiculos | ⚠ verify | categories, attributes |
+| Categories & attributes (generic) | https://developers.mercadolivre.com.br/pt_br/categorias-e-atributos , https://developers.mercadolivre.com.br/en_us/categories-attributes | SEARCH_INDEXED 2026-08-27 — generic attribute model, tags (`required` / `new_required` / `conditional_required` / `catalog_required` / `catalog_listing_required`), `PARENT_PK` / `CHILD_PK`, `technical_specs/input` | categories, attributes |
+| Categorias e Atributos — Veículos (vehicles vertical only) | https://developers.mercadolivre.com.br/pt_br/categorias-e-atributos-veiculos | ⚠ verify | attributes (auto-parts compatibility) |
 | Preditor de categorias / Category prediction | https://developers.mercadolivre.com.br/pt_br/categorizacao-de-produtos | verified 2026-08-27 (search-indexed; live 403) | categories |
 | Set categories for your products (leaf-category rule) | https://developers.mercadolivre.com.br/en_us/set-categories-for-products | verified 2026-08-27 (search-indexed; live 403) | categories |
 | Validações (fluxo de validação; tags de atributo) | https://developers.mercadolivre.com.br/pt_br/validacoes | ⚠ verify | categories, quality-audit |
@@ -50,8 +53,8 @@ rule solely on LLM prior knowledge.
 | O status das suas fichas técnicas | https://vendedores.mercadolivre.com.br/notas/o-status-das-suas-fichas-tecnicas/ | 2026 ⚠ verify | attributes, seo-and-discovery |
 | Códigos universais | https://www.mercadolivre.com.br/codigos-universais | ⚠ verify | attributes |
 | Qualidade das publicações / listing `/performance` | https://developers.mercadolivre.com.br/pt_br/qualidade-das-publicacoes | verified 2026-08-27 (search-indexed; live 403) — `/health` discontinued → `GET /item/$ITEM_ID/performance`; `level_wording`, entity `mode` OPPORTUNITY / WARNING | quality-audit, compliance |
-| Technical specs input / `incomplete_technical_specs` | https://developers.mercadolivre.com.br/en_us/attributes (`GET /categories/$CATEGORY_ID/technical_specs/input`) | verified 2026-08-27 (search-indexed; live 403) — `required` in `.../attributes` blocks publication; technical-spec attributes affect ranking only, tag `incomplete_technical_specs` | quality-audit, attributes |
-| Manage moderations / `/moderations/last_moderation` / `/infractions` | https://developers.mercadolivre.com.br/en_us/manage-moderations | verified 2026-08-27 (search-indexed; live 403) — `reason` always / `remedy` only when recoverable; statuses `active` / `paused` / `inactive`; preventive pauses; `/infractions` covers items/questions/answers/reviews | compliance, quality-audit |
+| Technical specs input / `incomplete_technical_specs` | https://developers.mercadolivre.com.br/en_us/attributes (`GET /categories/$CATEGORY_ID/technical_specs/input`) | SEARCH_INDEXED 2026-08-27 — decide publication-blocking from the resolved category attribute requirement model (`required` in `.../attributes` + conditional check); `technical_specs/input` can *also* add completeness/exposure requirements beyond that hard set (tag `incomplete_technical_specs`, ranking only) — it is **not** wholesale quality-only | quality-audit, attributes |
+| Manage moderations | https://developers.mercadolivre.com.br/en_us/manage-moderations | SEARCH_INDEXED 2026-08-28 — `GET /moderations/last_moderation/{MODERATION_REFERENCE_ID}` (`<element_id>-<element_type>`, suffix `-ITM` / `-QUE` / `-REV`); `GET /moderations/infractions/{USER_ID}` (query `related_item_id`, `element_id`, `element_type`, dates, pagination, sort). `reason` always / `remedy` only when recoverable. Infraction states `forbidden` / `waiting_for_patch` / `held` / `pending_documentation` — distinct from the Item's `active` / `paused` / `inactive`. Preventive pauses | compliance, quality-audit |
 | Catalog required listings / `catalog_only_restricted` | https://developers.mercadolivre.com.br/pt_br/publicacoes-necessarias-do-catalogo , https://developers.mercadolivre.com.br/en_us/catalog-eligibility | verified 2026-08-27 (search-indexed; live 403) — catalog-exclusive → `under_review` + `catalog_only_restricted`; catalog-required → `catalog_listing_eligible` + `listing_strategy: catalog_required` → `opt_obey`; applies to MLB | compliance, catalog |
 | Shipment handling / SELLER_PACKAGE_* (ME2) | https://developers.mercadolivre.com.br/en_us/shipment-handling | verified 2026-08-27 (search-indexed; live 403) — `SELLER_PACKAGE_HEIGHT/LENGTH/WIDTH/WEIGHT` mandatory for ME2 in some categories, not always in category attributes; cm + grams, real values; missing → moderated / not published | compliance, quality-audit |
 | Produtos proibidos / Práticas proibidas / Propriedade intelectual | https://www.mercadolivre.com.br/ajuda/Produtos-proibidos_1029 , https://www.mercadolivre.com.br/ajuda/contornar_estrutura_programas_4822 , https://www.mercadolivre.com.br/ajuda/1078 , https://www.mercadolivre.com.br/ajuda/Propriedade-roubada_1034 | ⚠ verify (search-indexed 2026-08-27) — prohibited-product categories; non-compliance → removal + account penalties | compliance |
@@ -81,17 +84,24 @@ rule solely on LLM prior knowledge.
   item payload; returns which `conditional_required` attributes actually apply
   for that item (not a static lookup). Verified 2026-08-27.
 - `GET /categories/$CATEGORY_ID/technical_specs/input` — technical-completeness
-  attributes (search-ranking; `incomplete_technical_specs`), distinct from
-  publication-blocking `required`. → `QUALITY_STATUS`. Verified 2026-08-27
-  (search-indexed).
+  attributes (search-ranking; `incomplete_technical_specs`). Mostly →
+  `QUALITY_STATUS`, but the response can also surface attributes that are
+  `required` — decide publication-blocking from the resolved category attribute
+  requirement model, not from this endpoint alone. SEARCH_INDEXED 2026-08-27.
 - `GET /item/$ITEM_ID/performance` — post-publication listing quality (score,
   `level_wording`, `OPPORTUNITY`/`WARNING` entities). **Replaces `/health`.**
-  → `QUALITY_STATUS`. Verified 2026-08-27 (search-indexed).
-- `GET /moderations/last_moderation` / `/infractions` — post-publication
-  enforcement state; `reason` (always) + `remedy` (only when recoverable);
-  `active` / `paused` / `inactive`. → `EXECUTION_STATUS` / compliance. Verified
-  2026-08-27 (search-indexed).
-- `GET /products/$CATALOG_PRODUCT_ID` and catalog search — catalog match
+  → `QUALITY_STATUS`. SEARCH_INDEXED 2026-08-27. (No separate
+  `/user-product/{id}/performance` endpoint is confirmed — do not add one.)
+- `GET /moderations/last_moderation/{MODERATION_REFERENCE_ID}` — last moderation
+  for one element; reference = `<element_id>-<element_type>` (`-ITM` for a
+  listing). `GET /moderations/infractions/{USER_ID}` — seller infraction history
+  (query: `related_item_id`, `element_id`, `element_type`, dates, pagination,
+  sort). `reason` (always) + `remedy` (only when recoverable). Infraction states
+  `forbidden` / `waiting_for_patch` / `held` / `pending_documentation` — distinct
+  from the Item's `active` / `paused` / `inactive`. → `EXECUTION_STATUS` /
+  compliance. SEARCH_INDEXED 2026-08-28.
+- `GET /products/search?site_id=MLB&q=...` (also `GET /marketplace/products/search`
+  — `site_id` required) and `GET /products/$CATALOG_PRODUCT_ID` — catalog match. SEARCH_INDEXED 2026-08-27.
 - `POST /items/validate` — pre-publish technical validation of a listing
   payload; HTTP 204 when no problems are found, HTTP 400 with a `cause[]` array
   of errors/warnings otherwise. Optional (meant for testing); passing it does
