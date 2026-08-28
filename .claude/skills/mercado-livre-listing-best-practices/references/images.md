@@ -15,13 +15,17 @@ volatile: true
 | Max file size | 10 MB per image |
 | Color space | RGB preferred over CMYK |
 | Product occupation | product should fill ~95% of the frame |
-| Max images per item | **DYNAMIC** — read `settings.max_pictures_per_item` for the category |
-| Max images per variation | **DYNAMIC** — read `settings.max_pictures_per_item_var` for the category |
+| Max images per item | **DYNAMIC** — read `settings.max_pictures_per_item` from `GET /categories/$CATEGORY_ID` |
+| Max images per variation | **DYNAMIC** — read `settings.max_pictures_per_item_var` from `GET /categories/$CATEGORY_ID` |
 | Main image | high quality; typically pure/white background, product only, no text/watermark/logos-overlay/borders/collage |
 | Intellectual property | only images you have the right to use; no competitor images, no stock images you don't license |
 
 Do **not** hardcode a maximum image count — it varies by category. Fetch the two
-`max_pictures_per_item*` settings at listing time.
+`max_pictures_per_item*` settings from `GET /categories/$CATEGORY_ID` (`settings`
+block) at listing time. These are OFFICIAL API-exposed fields whose *values* are
+DYNAMIC per category. (Field names + source corroborated 2026-08-27 against a
+search-indexed copy of the Developers "Trabalhar com imagens" / Categories docs;
+the numeric image specs above remain `⚠ verify`.)
 
 ## INTERNAL — high-conversion gallery plan
 
@@ -72,6 +76,7 @@ ports, logos, included accessories, structure, or included packaging.
 
 ## Sources
 
-- Trabalhar com imagens — https://developers.mercadolivre.com.br/pt_br/trabalhar-com-imagens — Developers — updated 2026-03-24 (per requester) ⚠ verify — consulted 2026-08-27 — formats, 1200×1200, 10 MB, RGB, 95%, `max_pictures_per_item(_var)`.
+- Trabalhar com imagens — https://developers.mercadolivre.com.br/pt_br/trabalhar-com-imagens — Developers — updated 2026-03-24 (per requester) ⚠ verify (live page 403 to bots) — formats (JPG/JPEG/PNG), recommended 1200×1200, min 500×500, max 1920×1920, ≤10 MB, RGB over CMYK, product ~95% of frame — corroborated 2026-08-27 against a search-indexed copy; keep `⚠ verify` until a live read.
+- Categories API image limits — `GET /categories/$CATEGORY_ID` `settings.max_pictures_per_item` / `settings.max_pictures_per_item_var` — Developers ("Working with pictures" / "Categories & attributes") — corroborated 2026-08-27 (search-indexed; live 403) — the per-category max image count for the item and per variation.
 - Como criar anúncios eficientes — https://vendedores.mercadolivre.com.br/nota/como-criar-anuncios-eficientes-no-mercado-livre — Central de Vendedores — 2026 ⚠ verify — consulted 2026-08-27 — good photos as a listing-quality lever.
 - Gallery roles table: INTERNAL (our operation), informed by general marketplace practice.

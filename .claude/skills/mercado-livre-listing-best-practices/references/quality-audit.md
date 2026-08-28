@@ -78,5 +78,6 @@ Then stop at **READY FOR REVIEW**.
 
 ## Sources
 
-- Validações / Validador de publicações — https://developers.mercadolivre.com.br/pt_br/validacoes — Developers — ⚠ verify — consulted 2026-08-27 — pre-publish validation flow and correction requests.
+- Validador de publicações (`POST /items/validate`) — https://developers.mercadolivre.com.br/pt_br/validador-de-publicacoes — Developers — verified 2026-08-27 (search-indexed copy; live page returns 403 to bots) — `POST /items/validate` with the listing payload; HTTP 204 when no problems are found, HTTP 400 with a `cause[]` array of errors/warnings otherwise. Optional, meant for testing; passing it is a technical pre-check only, not a guarantee that publication will succeed or that the content is correct.
+- Validações — https://developers.mercadolivre.com.br/pt_br/validacoes — Developers — ⚠ verify — consulted 2026-08-27 — validation flow and seller correction requests.
 - All other checks derive from the linked reference files.
