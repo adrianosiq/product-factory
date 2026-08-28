@@ -49,11 +49,11 @@ actually says from what is our strategy or a hypothesis.
 
 ## Audit checks (`SEARCH_RELEVANCE`)
 
-- [ ] Category confirmed via predictor.
+- [ ] Category resolved **and** validated (leaf, `listing_allowed`, domain fits) — see `categories.md` §1, not merely predicted.
 - [ ] All filterable attributes supported by the ProductMaster are filled.
 - [ ] Decisive search terms present early in title/`family_name`.
 - [ ] Brand/model spelling consistent everywhere.
-- [ ] GTIN present or legitimately "não se aplica".
+- [ ] Product identifier present with provenance, or legitimate absence handled via `EMPTY_GTIN_REASON` (`attributes.md`).
 - [ ] No stuffing; every relevance claim tagged OFFICIAL / INTERNAL / EXPERIMENTAL.
 
 ## Sources

@@ -27,8 +27,15 @@ category/API/publication requirement the listing does not satisfy) → `BLOCKER`
   - a dynamic check that has been **executed** and confirms a mandatory
     requirement the listing does not satisfy — including a `CONDITIONAL_REQUIRED`
     field the category/API confirms mandatory and that is unmet;
-  - category not confirmed via predictor, or `required`/`new_required` attributes
-    unresolved;
+  - no **resolved** category, or a category whose validation was **executed** and
+    shows it unusable/wrong (not a leaf, `listing_allowed = false`, attribute set
+    unfit); validation ≠ "returned by the predictor" (`categories.md` §1). A
+    category merely *pending* validation is REVIEW, not FAIL. Also
+    `required`/`new_required` attributes unresolved;
+  - an invented product identifier, or an identifier the category/API has
+    **confirmed** mandatory that is `REQUIRED_MISSING` (no provenance-backed
+    value and no accepted `EMPTY_GTIN_REASON`) — `attributes.md`. Still
+    `CONDITIONAL_PENDING` → REVIEW;
   - a hardcoded limit used where a DYNAMIC one exists, an ML-generated-title flow
     given a crafted title, or images breaking an OFFICIAL constraint / the
     DYNAMIC max;
@@ -60,15 +67,32 @@ A field being *present* is never evidence; a field being *absent* (`MISSING`) is
 distinct from a field carrying an *unsupported* claim (`UNSUPPORTED`) — see
 `attributes.md` §evidence.
 
+## Category & product-identifier checks
+
+- **Category** (`categories.md` §1): a `category_validated` category exists — leaf
+  (`children_categories` empty), `settings.listing_allowed = true`, and its
+  domain + attribute set fit the real product. The discovery mechanism
+  (predictor / catalog / revalidated mapping) is recorded but is **not** itself
+  the pass bar. Not yet validated because ML data is pending → REVIEW; validation
+  executed and the category is unusable or wrong → FAIL.
+- **Product identifier** (`attributes.md`): requirement resolved from the
+  category model; state is `KNOWN` (provenance-backed), `LEGITIMATELY_ABSENT`
+  (`EMPTY_GTIN_REASON` satisfied with a category `value_id`), or
+  `CONDITIONAL_PENDING` (→ REVIEW). `REQUIRED_MISSING`, an invented code, or a
+  competitor code with no same-product evidence → BLOCKER. Format validity alone
+  is not identity proof.
+- **Conflicts** on category, domain or identifier (`CONFLICTING`) are never
+  auto-resolved — human review; a conflicting identifier is never published.
+
 ## Dimensions (score 0–100 each)
 
 | Dimension | Pass bar | Key checks (see linked file) |
 |---|---|---|
 | `PRODUCT_ACCURACY` | No invented facts; all values CONFIRMED/vetted-INFERRED | `attributes.md` §evidence |
-| `CATEGORY` | Confirmed via predictor; domain correct | `categories.md` |
+| `CATEGORY` | Category resolved **and** validated (leaf, `listing_allowed`, domain + attribute set fit the product); discovery source recorded | `categories.md` |
 | `CATALOG` | Catalog checked; link is exact match or independent is justified | `catalog.md` |
 | `FAMILY_NAME_TITLE` | Right flow; DYNAMIC length; brand/model consistent; no prohibited words | `titles-and-family-name.md` |
-| `ATTRIBUTES` | required/new_required/conditional filled; `value_id`s; GTIN real/"N/A" | `attributes.md`, `categories.md` |
+| `ATTRIBUTES` | required/new_required/conditional filled; `value_id`s; identifier `KNOWN`/`LEGITIMATELY_ABSENT`/`CONDITIONAL_PENDING`, never invented | `attributes.md`, `categories.md` |
 | `SEARCH_RELEVANCE` | Filterable attributes filled; terms early; no stuffing | `seo-and-discovery.md` |
 | `DESCRIPTION` | `plain_text` valid; complements ficha; no banned content; claims backed | `descriptions.md` |
 | `IMAGES` | OFFICIAL limits; DYNAMIC count; identity unaltered; variant-correct | `images.md` |

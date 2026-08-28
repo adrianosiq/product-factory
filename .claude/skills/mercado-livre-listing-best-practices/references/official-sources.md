@@ -28,11 +28,12 @@ rule solely on LLM prior knowledge.
 | Preço por variação | https://developers.mercadolivre.com.br/pt_br/preco-variacao | 2026 ⚠ verify | variations-and-user-products, pricing-and-commercial |
 | Variations (modelo tradicional) | https://developers.mercadolivre.com.br/pt_br/variacoes | ⚠ verify | variations-and-user-products |
 | Categorias e Atributos | https://developers.mercadolivre.com.br/pt_br/categorias-e-atributos-veiculos | ⚠ verify | categories, attributes |
-| Preditor de categorias | https://developers.mercadolivre.com.br/pt_br/categorizacao-de-produtos | ⚠ verify | categories |
+| Preditor de categorias / Category prediction | https://developers.mercadolivre.com.br/pt_br/categorizacao-de-produtos | verified 2026-08-27 (search-indexed; live 403) | categories |
+| Set categories for your products (leaf-category rule) | https://developers.mercadolivre.com.br/en_us/set-categories-for-products | verified 2026-08-27 (search-indexed; live 403) | categories |
 | Validações (fluxo de validação; tags de atributo) | https://developers.mercadolivre.com.br/pt_br/validacoes | ⚠ verify | categories, quality-audit |
 | Validador de publicações (`POST /items/validate`) | https://developers.mercadolivre.com.br/pt_br/validador-de-publicacoes | verified 2026-08-27 (search-indexed; live 403) | quality-audit, SKILL.md §5 |
 | Categories & attributes / What is an attribute? (`POST .../attributes/conditional`) | https://developers.mercadolivre.com.br/en_us/categories-attributes | verified 2026-08-27 (search-indexed; live 403) | categories, attributes, SKILL.md §5 |
-| Identificadores de produtos (GTIN/EAN) | https://developers.mercadolivre.com.br/pt_br/identificadores-de-produtos | ⚠ verify | attributes |
+| Identificadores de produtos / Product identifiers (GTIN, `EMPTY_GTIN_REASON`) | https://developers.mercadolivre.com.br/pt_br/identificadores-de-produtos , https://developers.mercadolivre.com.br/en_us/product-identifiers/ | verified 2026-08-27 (search-indexed; live 403) | attributes |
 | Trabalhar com imagens | https://developers.mercadolivre.com.br/pt_br/trabalhar-com-imagens | 2026-03-24 (per requester) ⚠ verify | images |
 | Descrição de produtos | https://developers.mercadolivre.com.br/pt_br/descricao-de-produtos | 2026-03-13 (per requester) ⚠ verify | descriptions |
 | Compatibilidades de autopeças | https://developers.mercadolivre.com.br/pt_br/compatibilidades-itens-e-produtos-de-autopecas | ⚠ verify | attributes (compatibility) |
@@ -46,14 +47,21 @@ rule solely on LLM prior knowledge.
 
 ## API endpoints referenced by this Skill (DYNAMIC)
 
-- `GET /sites/MLB/domain_discovery/search?q=...` — category / domain prediction
-- `GET /categories/$CATEGORY_ID` — category `settings` incl.
-  `settings.max_pictures_per_item`, `settings.max_pictures_per_item_var`,
-  `settings.max_title_length`, `settings.listing_allowed`, variation-related
-  flags (category's own limits — read, never hardcode)
+- `GET /sites/MLB/domain_discovery/search?q=...` — category / domain **discovery**
+  (recommendation): ranked prediction list (`domain_id`, `category_id`,
+  `category_name`, attributes), default 4 / max 8. Not authoritative validation;
+  not a required call when a candidate is already established. Verified 2026-08-27.
+- `GET /categories/$CATEGORY_ID` — category resource for **validation** + limits:
+  must be a **leaf** (`children_categories` empty) with
+  `settings.listing_allowed = true` to host a listing; also `path_from_root`,
+  `settings.catalog_domain`, `settings.max_pictures_per_item(_var)`,
+  `settings.max_title_length`, variation flags (read, never hardcode).
+  Verified 2026-08-27.
 - `GET /categories/$CATEGORY_ID/attributes` — the **static** attribute model:
   attribute ids, `values`, `tags` (`required`, `new_required`,
-  `conditional_required`, `catalog_required`), `PARENT_PK`, `CHILD_PK`
+  `conditional_required`, `catalog_required`), `PARENT_PK`, `CHILD_PK`. Also the
+  source of the product-identifier attribute and of `EMPTY_GTIN_REASON`'s allowed
+  `values[]` (never hardcode the reason list).
 - `POST /categories/$CATEGORY_ID/attributes/conditional` — send the assembled
   item payload; returns which `conditional_required` attributes actually apply
   for that item (not a static lookup). Verified 2026-08-27.
