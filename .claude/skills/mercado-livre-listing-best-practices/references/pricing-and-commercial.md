@@ -41,12 +41,18 @@ Never phrase a strategy as an ML rule.
 - Choose per product based on margin and expected volume — this choice is
   INTERNAL strategy, not an ML rule.
 
-## Price per variation (new model)
+## Price per variation — legacy vs User Products
 
-- In the User Products model, price/shipping/payment can differ per sale
-  condition/variant (see `variations-and-user-products.md`).
+- **Legacy** (`variations[]`): price sits inside one Item; historically effectively
+  a common price across variations. Treat any exact per-variation-price rule as
+  LEGACY ONLY and re-verify (`variations-and-user-products.md` §9).
+- **User Products**: price is an **Item / sale-condition** concern, not a User
+  Product field. Different Items linked to the same UP may carry different
+  price / listing type / shipping; `family_name` is unrelated to price.
 - Keep per-variant prices explainable (e.g. larger size costs more) — unexplained
   spreads confuse buyers and invite questions/returns.
+- A price change is a commercial-condition edit; it must not alter product /
+  variant identity.
 
 ## Shipping (OFFICIAL ⚠ verify + INTERNAL)
 
@@ -59,7 +65,12 @@ Never phrase a strategy as an ML rule.
 
 ## Stock
 
-- Real stock only. Per-variant in both models.
+- Real stock only. Per-variant in both publication models. **Which write
+  mechanism** depends on the resolved **inventory mode**, not the publication
+  model: `PUT /items` `available_quantity` in `STANDARD` mode (incl. User
+  Products without Multi Origem); User Product stock-location endpoints once
+  Multi Origem is resolved-active (`variations-and-user-products.md` §10–§12).
+  Resolve the mode first.
 - Don't publish variants that are permanently out of stock — they hurt the
   listing's quality signals and buyer trust.
 

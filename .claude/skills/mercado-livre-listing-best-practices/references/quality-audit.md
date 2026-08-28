@@ -45,6 +45,15 @@ category/API/publication requirement the listing does not satisfy) → `BLOCKER`
     resolved category max/min count, or a category cover-photo moderation rule)
     or a Product Identity Guard `IDENTITY_FAIL` (`images.md`) — an only-recommended
     spec miss is a WARNING, `IDENTITY_REVIEW` is REVIEW;
+  - a **resolved incompatible marketplace write** (`variations-and-user-products.md`
+    §16): `variations[]` for a resolved `user_product_seller`; `/items`
+    `available_quantity` for a resolved **Multi Origem** inventory mode (not a FAIL
+    for a User Product that is not Multi Origem); a `MULTI_ORIGIN_SINGLE_WAREHOUSE`
+    seller spanning multiple warehouse/network nodes; an MLB `selling_address`
+    stock write instead of `seller_warehouse`; cross-User-Product Item mixing; an
+    invented / non-seller stock-location id; an invented or resolved-conflicting
+    `PARENT_PK`/`CHILD_PK`; a required `CHILD_PK` value missing after an executed
+    check. Model / inventory mode merely *unresolved* → REVIEW;
   - an unanswered return-prevention "reasonable misinterpretation" question.
 - `REVIEW` — no `FAIL` condition, but any of:
   - ≥1 CRITICAL finding;
@@ -132,6 +141,37 @@ See `images.md` (A OFFICIAL / B INTERNAL gallery / C Product Identity Guard).
   minimum or a critical product-comprehension gap makes it blocking. Marketplace
   moderation remains authoritative regardless of a local pass.
 
+## Publication-model & inventory-mode checks
+
+Procedural (part of `VARIANTS`; feeds `CONSISTENCY`). See
+`variations-and-user-products.md`.
+
+- **`PUBLICATION_MODEL`** — `PASS`: model resolved (`LEGACY` / `USER_PRODUCT`) and
+  the payload strategy matches it. `REVIEW`: seller/item model pending.
+  `FAIL`: the payload definitively uses the incompatible model (e.g. `variations[]`
+  for a resolved `user_product_seller`; a manual `title` where the new model
+  generates it).
+- **`INVENTORY_MODE`** — a separate axis from `PUBLICATION_MODEL`. States:
+  `STANDARD` (no `warehouse_management` — `PUT /items` `available_quantity`,
+  including for User Products without Multi Origem) / `MULTI_ORIGIN_SINGLE_WAREHOUSE`
+  (`warehouse_management`, no `multiwarehouse` — one warehouse) /
+  `MULTI_ORIGIN_MULTIWAREHOUSE` (`warehouse_management` + `multiwarehouse`) /
+  `UNRESOLVED`. `PASS`: mode resolved and the stock write matches. `REVIEW`: seller
+  tags not read. `FAIL`: an incompatible write — `available_quantity` on `/items`
+  for a resolved `MULTI_ORIGIN_*` mode; a `MULTI_ORIGIN_SINGLE_WAREHOUSE` seller
+  spanning multiple warehouse/network nodes; an MLB `selling_address` stock write
+  instead of `seller_warehouse`; stock to a non-seller location; an invented
+  `store_id` / `network_node_id`. `available_quantity` on a non-Multi-Origem User
+  Product is **not** a FAIL.
+- **Identity mapping** — internal `variant_id` / SKU is stable and distinct from
+  every ML id (`user_product_id`, `family_id`, `item_id`, `variation_id`); each
+  returned ML id is persisted; `family_id` is not treated as immutable business
+  identity; `catalog_product_id ≠ user_product_id`.
+- **Family / PK** — PARENT_PK values compatible across a forced family (conflict →
+  BLOCKER); required CHILD_PK values evidence-backed (missing after an executed
+  check → BLOCKER; pending → REVIEW); PK roles resolved from domain metadata, not
+  hardcoded.
+
 ## Dimensions (score 0–100 each)
 
 | Dimension | Pass bar | Key checks (see linked file) |
@@ -144,7 +184,7 @@ See `images.md` (A OFFICIAL / B INTERNAL gallery / C Product Identity Guard).
 | `SEARCH_RELEVANCE` | Clear product identity; relevant structured attributes filled; marketplace/customer terminology; no stuffing, no irrelevant terms; title/family consistent with product; no undocumented-ranking folklore scored as fact | `seo-and-discovery.md` |
 | `DESCRIPTION` | `plain_text` valid; complements ficha; no banned content; claims backed | `descriptions.md` |
 | `IMAGES` | Confirmed hard specs met (format, min size, size cap); count within resolved DYNAMIC max/min; category cover-photo rules; recommended-only specs are WARNINGs; every asset evidence-backed and `IDENTITY_PASS`; variant-correct | `images.md` |
-| `VARIANTS` | Correct model; PARENT_PK/CHILD_PK right; per-variant stock/img; cap respected | `variations-and-user-products.md` |
+| `VARIANTS` | `PUBLICATION_MODEL` + `INVENTORY_MODE` resolved and payload matches; stable internal `variant_id`/SKU mapped to (not replaced by) ML ids; PARENT_PK/CHILD_PK resolved from metadata; `SELLER_SKU` (not `seller_custom_field`); per-variant stock via the resolved mechanism; per-UP Item cap / legacy variation limit respected; variant-correct images | `variations-and-user-products.md` |
 | `CONSISTENCY` | No contradictions across the chain below | this file |
 | `RETURN_PREVENTION` | Checklist clean; mandatory question answered "no" | `return-prevention.md` |
 | `COMPLIANCE` | Condition rules, prohibited claims, IP, regulated-category needs | `descriptions.md`, `pricing-and-commercial.md` |
