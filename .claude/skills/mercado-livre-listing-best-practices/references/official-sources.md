@@ -34,7 +34,9 @@ rule solely on LLM prior knowledge.
 | Validador de publicações (`POST /items/validate`) | https://developers.mercadolivre.com.br/pt_br/validador-de-publicacoes | verified 2026-08-27 (search-indexed; live 403) | quality-audit, SKILL.md §5 |
 | Categories & attributes / What is an attribute? (`POST .../attributes/conditional`) | https://developers.mercadolivre.com.br/en_us/categories-attributes | verified 2026-08-27 (search-indexed; live 403) | categories, attributes, SKILL.md §5 |
 | Identificadores de produtos / Product identifiers (GTIN, `EMPTY_GTIN_REASON`) | https://developers.mercadolivre.com.br/pt_br/identificadores-de-produtos , https://developers.mercadolivre.com.br/en_us/product-identifiers/ | verified 2026-08-27 (search-indexed; live 403) | attributes |
-| Trabalhar com imagens | https://developers.mercadolivre.com.br/pt_br/trabalhar-com-imagens | 2026-03-24 (per requester) ⚠ verify | images |
+| Trabalhar com imagens / Working with pictures | https://developers.mercadolivre.com.br/pt_br/trabalhar-com-imagens , https://developers.mercadolivre.com.br/en_us/working-with-pictures | 2026-03-24 (per requester); verified 2026-08-27 (search-indexed; live 403) — formats, RGB, ~95%, 1200×1200 rec / 500×500 min / 1920×1920 max, ≤10 MB, zoom >~800 px, smartcrop, `POST /pictures/items/upload` | images |
+| Fotos de qualidade… / Como tirar boas fotos dos seus produtos | https://vendedores.mercadolivre.com.br/nota/fotos-de-qualidade-o-segredo-para-se-destacar-e-vender-mais , https://www.mercadolivre.com.br/ajuda/Como-tirar-boas-fotos-dos-seus-produtos_1320 | 2026 ⚠ verify (search-indexed 2026-08-27) — cover-photo: product-only, prohibited overlays (logo/watermark/promo/QR/contact), category-dependent white-background requirement | images |
+| Image moderation / Manage moderations / Image Diagnostics | https://developers.mercadolibre.com.ar/en_us/manage-moderations , https://developers.mercadolibre.com.ar/en_us/image-diagnostics | verified 2026-08-27 (search-indexed; live 403) — image-quality moderation, `poor_quality_thumbnail` on `active`/`paused`; Image Diagnostics (base64 / `picture_id` / URL; prioritise thumbnail) | images |
 | Descrição de produtos | https://developers.mercadolivre.com.br/pt_br/descricao-de-produtos | 2026-03-13 (per requester) ⚠ verify | descriptions |
 | Compatibilidades de autopeças | https://developers.mercadolivre.com.br/pt_br/compatibilidades-itens-e-produtos-de-autopecas | ⚠ verify | attributes (compatibility) |
 | Informe compatibilidades | https://developers.mercadolivre.com.br/informe-compatibilidades | ⚠ verify | attributes (compatibility) |
@@ -73,6 +75,12 @@ rule solely on LLM prior knowledge.
   not guarantee publication or content correctness. Verified 2026-08-27.
 - `POST /items/{MLB}/compatibilities`
 - `GET /items/{MLB}/description` / `POST` with `plain_text`
+- `POST /pictures/items/upload` — multipart upload of item images to ML's CDN
+  (≤ 10 MB per file). Verified 2026-08-27 (search-indexed).
+- Image Diagnostics API — validate an image (base64 / `picture_id` / URL) before
+  use; prioritise the main image (thumbnail). Image moderation flags a listing
+  `active`/`paused` with `poor_quality_thumbnail`. Future execution mechanism —
+  MCP wiring out of scope. Verified 2026-08-27 (search-indexed).
 
 Confirm exact paths and payloads against the live Developers docs — API surface
 changes. Items marked "Verified 2026-08-27" were corroborated against
