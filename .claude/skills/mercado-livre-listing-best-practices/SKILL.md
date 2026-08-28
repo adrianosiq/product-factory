@@ -140,7 +140,7 @@ conflict is flagged for human review.
 | Which docs are authoritative, when were they last updated | `references/official-sources.md` |
 | Item vs User Product vs Family vs Catalog; what field holds what | `references/product-structure.md` |
 | Category prediction, domains, attribute tags, PARENT_PK/CHILD_PK | `references/categories.md` |
-| Title rules; `family_name` when title is generated | `references/titles-and-family-name.md` |
+| Title mode (manual / generated / unresolved), `family_name`, brand/model in titles, OFFICIAL vs strategy | `references/titles-and-family-name.md` |
 | How products get found; what is OFFICIAL vs strategy | `references/seo-and-discovery.md` |
 | Ficha técnica, product identifiers (GTIN / `EMPTY_GTIN_REASON`), structured-first | `references/attributes.md` |
 | Image formats, resolution, per-category limits, per-variant images | `references/images.md` |
@@ -218,10 +218,18 @@ Follow in order. Each step writes into the draft and can raise audit findings.
    (`references/competitor-research.md`, `references/review-mining.md`). Extract
    patterns and buyer objections; never copy content.
 7. **Listing strategy** — Item vs User Product model; how many variants; listing type intent.
-8. **`family_name` / title strategy** —
-   - Title-is-provided flow: build the title per `references/titles-and-family-name.md` (OFFICIAL rules), respecting the category's DYNAMIC length limit.
-   - Generated-title flow (User Products / UPtin): do NOT craft a title; optimize
-     `family_name`, attributes and domain instead.
+8. **`family_name` / title strategy** — first **detect the title mode**
+   (`references/titles-and-family-name.md` §1); don't craft a `title` before it is
+   known.
+   - Manual / traditional flow: build the title per the OFFICIAL guidance, within
+     the category's DYNAMIC `max_title_length`. No fixed 60; no "first 40
+     characters" rule.
+   - Generated / User Products flow (incl. UPtin): do NOT craft a title; optimize
+     `family_name` (≤ the domain's `max_title_length`), attributes and domain.
+   - Mode unresolved (account/marketplace context pending): record a dynamic
+     check, don't assume a flow → `REVIEW`, not `FAIL`.
+   - Brand/model/MPN go in the title/`family_name` only where they legitimately
+     exist and are evidence-backed — never invented to fill a template.
 9. **Attributes** — fill structured fields first; never invent a product
    identifier (GTIN/EAN/UPC/…), brand, model or spec. For a legitimate no-GTIN
    product use ML's `EMPTY_GTIN_REASON` mechanism (`references/attributes.md`),
@@ -285,7 +293,12 @@ statuses:
   **confirmed** it mandatory and there is neither a provenance-backed value nor
   an accepted `EMPTY_GTIN_REASON` (`references/attributes.md`). Requirement still
   `CONDITIONAL_PENDING` → REVIEW, not FAIL.
-- Title crafted for a flow where the title is ML-generated, or a hardcoded limit used where a DYNAMIC one exists.
+- A manual `title` crafted/sent in a flow where the current API **generates** it
+  (title mode resolved and incompatible), a required generated-title /
+  `family_name` mechanism violated, or an invented brand/model in the
+  title/`family_name`. Title mode merely *unresolved* → REVIEW, not FAIL
+  (`references/titles-and-family-name.md` §1).
+- A hardcoded title/`family_name` length used where a DYNAMIC `max_title_length` exists.
 - Images violating an OFFICIAL constraint, or exceeding the category's DYNAMIC max.
 - Unanswered "reasonable misinterpretation" question from return prevention.
 

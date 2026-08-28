@@ -36,8 +36,11 @@ category/API/publication requirement the listing does not satisfy) → `BLOCKER`
     **confirmed** mandatory that is `REQUIRED_MISSING` (no provenance-backed
     value and no accepted `EMPTY_GTIN_REASON`) — `attributes.md`. Still
     `CONDITIONAL_PENDING` → REVIEW;
-  - a hardcoded limit used where a DYNAMIC one exists, an ML-generated-title flow
-    given a crafted title, or images breaking an OFFICIAL constraint / the
+  - a hardcoded limit used where a DYNAMIC one exists; a manual `title`
+    crafted/sent where the API **generates** it (title mode resolved and
+    incompatible), a required generated-title / `family_name` mechanism violated,
+    or an invented brand/model in the title/`family_name` (title mode merely
+    *unresolved* → REVIEW); or images breaking an OFFICIAL constraint / the
     DYNAMIC max;
   - an unanswered return-prevention "reasonable misinterpretation" question.
 - `REVIEW` — no `FAIL` condition, but any of:
@@ -84,6 +87,23 @@ distinct from a field carrying an *unsupported* claim (`UNSUPPORTED`) — see
 - **Conflicts** on category, domain or identifier (`CONFLICTING`) are never
   auto-resolved — human review; a conflicting identifier is never published.
 
+## Title & family_name checks (`FAMILY_NAME_TITLE`)
+
+See `titles-and-family-name.md`.
+
+- **BLOCKER** — an invented brand / model / MPN in the title or `family_name`;
+  the title/`family_name` contradicts ProductMaster or the structured attributes;
+  a manual `title` sent in a flow where the current API generates it (mode
+  resolved and incompatible); a required generated-title / `family_name`
+  mechanism violated; `family_name` that encodes the picker (`CHILD_PK`) value so
+  the whole family is mislabelled as one variant.
+- **REVIEW** — title mode unresolved because account / marketplace context is
+  pending; the family/title relationship needs dynamic confirmation.
+- **WARNING / RECOMMENDATION** — unclear or redundant wording; weak ordering of
+  the product-defining terms; a keyword-research opportunity; filler words. An
+  INTERNAL optimisation is never a BLOCKER unless it protects product truth or a
+  confirmed marketplace requirement.
+
 ## Dimensions (score 0–100 each)
 
 | Dimension | Pass bar | Key checks (see linked file) |
@@ -91,9 +111,9 @@ distinct from a field carrying an *unsupported* claim (`UNSUPPORTED`) — see
 | `PRODUCT_ACCURACY` | No invented facts; all values CONFIRMED/vetted-INFERRED | `attributes.md` §evidence |
 | `CATEGORY` | Category resolved **and** validated (leaf, `listing_allowed`, domain + attribute set fit the product); discovery source recorded | `categories.md` |
 | `CATALOG` | Catalog checked; link is exact match or independent is justified | `catalog.md` |
-| `FAMILY_NAME_TITLE` | Right flow; DYNAMIC length; brand/model consistent; no prohibited words | `titles-and-family-name.md` |
+| `FAMILY_NAME_TITLE` | Title mode detected (manual/generated/unresolved); DYNAMIC length (category `max_title_length` for the title, domain `max_title_length` for `family_name`); brand/model only where legitimate and evidence-backed, never invented; no prohibited content; `family_name` = shared family identity | `titles-and-family-name.md` |
 | `ATTRIBUTES` | required/new_required/conditional filled; `value_id`s; identifier `KNOWN`/`LEGITIMATELY_ABSENT`/`CONDITIONAL_PENDING`, never invented | `attributes.md`, `categories.md` |
-| `SEARCH_RELEVANCE` | Filterable attributes filled; terms early; no stuffing | `seo-and-discovery.md` |
+| `SEARCH_RELEVANCE` | Clear product identity; relevant structured attributes filled; marketplace/customer terminology; no stuffing, no irrelevant terms; title/family consistent with product; no undocumented-ranking folklore scored as fact | `seo-and-discovery.md` |
 | `DESCRIPTION` | `plain_text` valid; complements ficha; no banned content; claims backed | `descriptions.md` |
 | `IMAGES` | OFFICIAL limits; DYNAMIC count; identity unaltered; variant-correct | `images.md` |
 | `VARIANTS` | Correct model; PARENT_PK/CHILD_PK right; per-variant stock/img; cap respected | `variations-and-user-products.md` |
