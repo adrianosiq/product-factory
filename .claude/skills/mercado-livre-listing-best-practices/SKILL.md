@@ -145,7 +145,7 @@ conflict is flagged for human review.
 | Ficha técnica, product identifiers (GTIN / `EMPTY_GTIN_REASON`), structured-first | `references/attributes.md` |
 | OFFICIAL image specs vs INTERNAL gallery strategy vs Product Identity Guard; AI-edit safeguards | `references/images.md` |
 | Description structure, plain_text, what to avoid | `references/descriptions.md` |
-| Variations in the new model; migration from `variations[]` | `references/variations-and-user-products.md` |
+| Legacy variations vs User Products; families; PARENT_PK/CHILD_PK; sale conditions; stock ownership; multi-origin inventory | `references/variations-and-user-products.md` |
 | Catalog association, `catalog_product_id`, Buy Box | `references/catalog.md` |
 | Price, listing types, shipping, requirement vs recommendation vs strategy | `references/pricing-and-commercial.md` |
 | Analyzing competitor listings without copying | `references/competitor-research.md` |
@@ -217,7 +217,12 @@ Follow in order. Each step writes into the draft and can raise audit findings.
 6. **Competitor / search intelligence** — optional, if tools available
    (`references/competitor-research.md`, `references/review-mining.md`). Extract
    patterns and buyer objections; never copy content.
-7. **Listing strategy** — Item vs User Product model; how many variants; listing type intent.
+7. **Listing strategy** — resolve the **publication model** first
+   (`LEGACY` / `USER_PRODUCT` / `UNRESOLVED`) from seller tags + item context, and
+   the **stock mode** (`LEGACY ITEM` / `USER PRODUCT` / `MULTI-ORIGIN` /
+   `UNRESOLVED`) before any payload — do not infer the model from variant count
+   (`references/variations-and-user-products.md` §2). Then: how many variants,
+   listing-type intent. Unresolved → dynamic check → REVIEW, not FAIL.
 8. **`family_name` / title strategy** — first **detect the title mode**
    (`references/titles-and-family-name.md` §1); don't craft a `title` before it is
    known.
@@ -237,8 +242,12 @@ Follow in order. Each step writes into the draft and can raise audit findings.
    where it genuinely applies.
 10. **Description** — `plain_text`; complements the ficha técnica; structured
     sections; no keyword stuffing, no unproven claims, no invented features.
-11. **Variant strategy** — model the variants per `references/variations-and-user-products.md`;
-    per-variant stock, images and (new model) sale conditions/price.
+11. **Variant strategy** — model per `references/variations-and-user-products.md`:
+    keep the internal `variant_id` / SKU stable (ML ids are external mappings to
+    persist); resolve `PARENT_PK` / `CHILD_PK` from domain metadata (never
+    hardcode); SKU goes in `SELLER_SKU` (not `seller_custom_field`); price is an
+    Item / sale-condition concern in the new model; stock belongs to the User
+    Product / its locations — `/items` `available_quantity` is legacy-only.
 12. **Image strategy** — keep the three layers of `references/images.md` separate:
     (A) OFFICIAL ML rules — recommended specs vs hard limits, DYNAMIC per-category
     count, category-dependent cover-photo rules, moderation stays authoritative;
@@ -303,6 +312,13 @@ statuses:
   title/`family_name`. Title mode merely *unresolved* → REVIEW, not FAIL
   (`references/titles-and-family-name.md` §1).
 - A hardcoded title/`family_name` length used where a DYNAMIC `max_title_length` exists.
+- A **resolved incompatible marketplace write** (`references/variations-and-user-products.md` §16):
+  `variations[]` for a resolved `user_product_seller`; `/items` `available_quantity`
+  for a resolved multi-origin (`warehouse_management`) account; another variant's
+  `user_product_id` or Items mixed across User Products; an invented / non-seller
+  stock-location id; an invented or resolved-conflicting `PARENT_PK` / `CHILD_PK`;
+  a required `CHILD_PK` variant value missing after an executed check. Model or
+  stock mode merely *unresolved* → REVIEW, not FAIL.
 - An image breaking a **confirmed hard** ML rule (unsupported format, below the
   accepted minimum, over the size cap, over the resolved category max count, or a
   cover-photo moderation rule for the category), or a **`IDENTITY_FAIL`** —

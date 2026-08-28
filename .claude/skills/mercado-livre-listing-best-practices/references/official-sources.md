@@ -24,9 +24,11 @@ rule solely on LLM prior knowledge.
 | Page | URL | source_last_updated | Rules derived (see file) |
 |---|---|---|---|
 | Publicar produtos (guia) | https://developers.mercadolivre.com.br/pt_br/publicacao-de-produtos/ | ⚠ verify | product-structure, categories |
-| User Products | https://developers.mercadolivre.com.br/pt_br/user-products | 2026-06-17 (per requester); `family_name` rules verified 2026-08-27 (search-indexed; live 403) | product-structure, variations-and-user-products, titles-and-family-name |
-| Preço por variação | https://developers.mercadolivre.com.br/pt_br/preco-variacao | 2026 ⚠ verify | variations-and-user-products, pricing-and-commercial |
-| Variations (modelo tradicional) | https://developers.mercadolivre.com.br/pt_br/variacoes | ⚠ verify | variations-and-user-products |
+| User Products | https://developers.mercadolivre.com.br/pt_br/user-products , https://developers.mercadolibre.com.ar/en_us/user-products | 2026-06-17 (per requester); verified 2026-08-27 (search-indexed; live 403) — UP=physical product, `user_product_id` ML-assigned, 1 UP→many Items (sale conditions), `family_id`, `user_product_seller` / `user_product_listing` tags, post-activation unification, auto-generated title, async replication of product-level PUTs, family calc (PARENT_PK identical / CHILD_PK+custom id+name / `read_only` PK excluded), `GET /users/$SELLER_ID/items/search?user_product_id=`, `GET /sites/$SITE/user-products-families/$FAMILY_ID` | product-structure, variations-and-user-products, titles-and-family-name |
+| Preço por variação / Price per variation | https://developers.mercadolivre.com.br/pt_br/preco-variacao | 2026; verified 2026-08-27 (search-indexed; live 403) — per-Item price/shipping/stock, ~30 sale conditions per UP, wave rollout, seller-request migration only | variations-and-user-products, pricing-and-commercial |
+| Variations (legacy) | https://developers.mercadolivre.com.br/pt_br/variacoes | verified 2026-08-27 (search-indexed; live 403) — `variations[]` / `attribute_combinations` / `SELLER_SKU`; max 100 per item (250 Fashion / Mobile Accessories / Auto Parts), stated 2022-12-14 | variations-and-user-products |
+| Multi-Origin Stock / Gestión de stock multiorigen / User Products | https://developers.mercadolibre.com.ar/en_us/multi-origin-stock , https://developers.mercadolibre.com.ar/stock-multiwarehouse | verified 2026-08-27 (search-indexed; live 403) — AR/CL docs, **MLB support DYNAMIC** — `warehouse_management` tag, `POST /items/multiwarehouse` + `stock_locations`, `available_quantity` invalid in multi-origin, `GET/PUT /user-products/{id}/stock[/type/seller_warehouse]`, `GET /users/{id}/stores/search?tags=stock_location`, location types `meli_facility` (no seller write) / `seller_warehouse` / `selling_address` | variations-and-user-products, product-structure |
+| SELLER_SKU vs seller_custom_field | https://developers.mercadolibre.com.ar/en_us/variations | verified 2026-08-27 (search-indexed; live 403) — `SELLER_SKU` is the ML-recognised SKU attribute; `seller_custom_field` is seller-internal, unrelated | variations-and-user-products |
 | Categorias e Atributos | https://developers.mercadolivre.com.br/pt_br/categorias-e-atributos-veiculos | ⚠ verify | categories, attributes |
 | Preditor de categorias / Category prediction | https://developers.mercadolivre.com.br/pt_br/categorizacao-de-produtos | verified 2026-08-27 (search-indexed; live 403) | categories |
 | Set categories for your products (leaf-category rule) | https://developers.mercadolivre.com.br/en_us/set-categories-for-products | verified 2026-08-27 (search-indexed; live 403) | categories |
@@ -81,6 +83,28 @@ rule solely on LLM prior knowledge.
   use; prioritise the main image (thumbnail). Image moderation flags a listing
   `active`/`paused` with `poor_quality_thumbnail`. Future execution mechanism —
   MCP wiring out of scope. Verified 2026-08-27 (search-indexed).
+
+**User Products & multi-origin stock** (verified 2026-08-27, search-indexed; live
+403. Multi-origin largely AR/CL docs — MLB support is DYNAMIC):
+
+- `GET /users/$USER_ID` — seller tags: `user_product_seller` (new model active),
+  `warehouse_management` (multiwarehouse active).
+- `GET /user-products/$USER_PRODUCT_ID` — UP product-level data (`family_id`,
+  attributes, identity). `GET /sites/$SITE/user-products-families/$FAMILY_ID` —
+  all UPs in a family.
+- `GET /users/$SELLER_ID/items/search?user_product_id=…` — Items for a UP
+  (comma-separated list accepted).
+- `POST /items/multiwarehouse` — create an Item with `stock_locations`
+  (`store_id`, `network_node_id`, `quantity`) for a `warehouse_management` seller;
+  `available_quantity` invalid; response returns `user_product_id` to persist.
+- `GET /user-products/$USER_PRODUCT_ID/stock` — per-location `type`,
+  `network_node_id`, `store_id`, `quantity`.
+- `PUT /user-products/$USER_PRODUCT_ID/stock/type/seller_warehouse` — write
+  seller-warehouse stock. `meli_facility` (Full) is not seller-writable.
+- `GET /users/$USER_ID/stores/search?tags=stock_location` — discover the seller's
+  stock locations and their `store_id` / `network_node_id`.
+- `POST /sites/$SITE/user-products-families/$FAMILY_ID/tasks` — async family
+  editor (⚠ verify path/behaviour).
 
 Confirm exact paths and payloads against the live Developers docs — API surface
 changes. Items marked "Verified 2026-08-27" were corroborated against
