@@ -29,7 +29,9 @@ rule solely on LLM prior knowledge.
 | Variations (modelo tradicional) | https://developers.mercadolivre.com.br/pt_br/variacoes | ⚠ verify | variations-and-user-products |
 | Categorias e Atributos | https://developers.mercadolivre.com.br/pt_br/categorias-e-atributos-veiculos | ⚠ verify | categories, attributes |
 | Preditor de categorias | https://developers.mercadolivre.com.br/pt_br/categorizacao-de-produtos | ⚠ verify | categories |
-| Validações / Validador de publicações | https://developers.mercadolivre.com.br/pt_br/validacoes | ⚠ verify | quality-audit, categories |
+| Validações (fluxo de validação; tags de atributo) | https://developers.mercadolivre.com.br/pt_br/validacoes | ⚠ verify | categories, quality-audit |
+| Validador de publicações (`POST /items/validate`) | https://developers.mercadolivre.com.br/pt_br/validador-de-publicacoes | verified 2026-08-27 (search-indexed; live 403) | quality-audit, SKILL.md §5 |
+| Categories & attributes / What is an attribute? (`POST .../attributes/conditional`) | https://developers.mercadolivre.com.br/en_us/categories-attributes | verified 2026-08-27 (search-indexed; live 403) | categories, attributes, SKILL.md §5 |
 | Identificadores de produtos (GTIN/EAN) | https://developers.mercadolivre.com.br/pt_br/identificadores-de-produtos | ⚠ verify | attributes |
 | Trabalhar com imagens | https://developers.mercadolivre.com.br/pt_br/trabalhar-com-imagens | 2026-03-24 (per requester) ⚠ verify | images |
 | Descrição de produtos | https://developers.mercadolivre.com.br/pt_br/descricao-de-produtos | 2026-03-13 (per requester) ⚠ verify | descriptions |
@@ -45,19 +47,28 @@ rule solely on LLM prior knowledge.
 ## API endpoints referenced by this Skill (DYNAMIC)
 
 - `GET /sites/MLB/domain_discovery/search?q=...` — category / domain prediction
-- `GET /categories/$CATEGORY_ID` — settings incl. `settings.max_pictures_per_item`,
-  `settings.max_pictures_per_item_var`, `settings.max_title_length`,
-  `settings.listing_allowed`, variation-related flags
-- `GET /categories/$CATEGORY_ID/attributes` — attribute ids, `values`, `tags`
-  (`required`, `new_required`, `conditional_required`), `PARENT_PK`, `CHILD_PK`
-- `GET /categories/$CATEGORY_ID/attributes/conditional`
+- `GET /categories/$CATEGORY_ID` — category `settings` incl.
+  `settings.max_pictures_per_item`, `settings.max_pictures_per_item_var`,
+  `settings.max_title_length`, `settings.listing_allowed`, variation-related
+  flags (category's own limits — read, never hardcode)
+- `GET /categories/$CATEGORY_ID/attributes` — the **static** attribute model:
+  attribute ids, `values`, `tags` (`required`, `new_required`,
+  `conditional_required`, `catalog_required`), `PARENT_PK`, `CHILD_PK`
+- `POST /categories/$CATEGORY_ID/attributes/conditional` — send the assembled
+  item payload; returns which `conditional_required` attributes actually apply
+  for that item (not a static lookup). Verified 2026-08-27.
 - `GET /products/$CATALOG_PRODUCT_ID` and catalog search — catalog match
-- `POST /items/validate` (pre-publish validation)
+- `POST /items/validate` — pre-publish technical validation of a listing
+  payload; HTTP 204 when no problems are found, HTTP 400 with a `cause[]` array
+  of errors/warnings otherwise. Optional (meant for testing); passing it does
+  not guarantee publication or content correctness. Verified 2026-08-27.
 - `POST /items/{MLB}/compatibilities`
 - `GET /items/{MLB}/description` / `POST` with `plain_text`
 
 Confirm exact paths and payloads against the live Developers docs — API surface
-changes and this list is `⚠ verify`.
+changes. Items marked "Verified 2026-08-27" were corroborated against
+search-indexed copies of the official Developers pages this date (the live pages
+return HTTP 403 to bots); everything else here remains `⚠ verify`.
 
 ## How to cite
 

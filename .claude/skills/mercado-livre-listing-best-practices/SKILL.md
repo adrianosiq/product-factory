@@ -97,13 +97,22 @@ conflict is flagged for human review.
 **Call the ML API / MCP** (never guess) for every `DYNAMIC` value:
 
 - `category_id` via the category predictor
-- `GET /categories/$CATEGORY_ID/attributes` — attribute ids, value lists, tags
-  (`required`, `new_required`, `conditional_required`), `PARENT_PK`/`CHILD_PK`
-- `GET /categories/$CATEGORY_ID/attributes/conditional` — conditional requirements
-- category settings: title length limit, `max_pictures_per_item`,
-  `max_pictures_per_item_var`, variation rules, `buying_mode`, listing types
+- `GET /categories/$CATEGORY_ID/attributes` — the **static** attribute model:
+  attribute ids, value lists, tags (`required`, `new_required`,
+  `conditional_required`, `catalog_required`), `PARENT_PK`/`CHILD_PK`
+- `POST /categories/$CATEGORY_ID/attributes/conditional` — resolves which
+  `conditional_required` attributes are actually required **for this item**. The
+  request body is the assembled item payload (category, price, condition,
+  attributes, …); the evaluation depends on that data, so it is not a static
+  category lookup. (OFFICIAL — verified 2026-08-27)
+- `GET /categories/$CATEGORY_ID` — category `settings`: `max_title_length`,
+  `max_pictures_per_item`, `max_pictures_per_item_var`, variation rules,
+  `buying_mode`, listing types
 - catalog match: does a `catalog_product_id` already exist for this product
-- pre-publish validator endpoint for the assembled payload
+- `POST /items/validate` — pre-publish technical validation of the assembled
+  payload (HTTP 204 = no problems found; HTTP 400 = a `cause[]` list of
+  errors/warnings). Optional; passing it is not a guarantee that publication
+  will succeed or that the content is correct. (OFFICIAL — verified 2026-08-27)
 
 If the API/MCP is unavailable, every dependent decision goes into
 `dynamic_checks_required` and the audit cannot return `PASS`.

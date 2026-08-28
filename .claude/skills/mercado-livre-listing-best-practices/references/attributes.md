@@ -14,7 +14,11 @@ comes before and feeds more than the description.)
 
 1. `required` attributes (always).
 2. `new_required` attributes (when `condition = new`).
-3. `conditional_required` that actually apply (resolve via the conditional endpoint).
+3. `conditional_required` that actually apply — resolve via
+   `POST /categories/$CATEGORY_ID/attributes/conditional`, sending the assembled
+   item payload; fill whatever it returns as required. The `conditional_required`
+   tag from `GET /categories/$CATEGORY_ID/attributes` only flags an attribute as
+   *possibly* required; this POST call decides it for the specific item.
 4. Variation attributes (`PARENT_PK` / `CHILD_PK`) — see `categories.md`.
 5. `catalog_required` if associating to catalog.
 6. All remaining attributes the ProductMaster supports (recommended + optional).
@@ -71,7 +75,7 @@ description statements.
 
 ## Audit checks (`ATTRIBUTES`)
 
-- [ ] All required / new_required / applicable conditional_required filled.
+- [ ] All required / new_required filled; applicable conditional_required resolved via `POST .../attributes/conditional` and filled.
 - [ ] `value_id` used wherever a list exists; units correct.
 - [ ] GTIN real or legitimately "não se aplica"; brand/model real and consistent.
 - [ ] No invented values; unresolved gaps are WARNINGs, not guesses.
@@ -82,6 +86,7 @@ description statements.
 
 - Categorias e Atributos — https://developers.mercadolivre.com.br/pt_br/categorias-e-atributos-veiculos — Developers — ⚠ verify — consulted 2026-08-27.
 - Identificadores de produtos — https://developers.mercadolivre.com.br/pt_br/identificadores-de-produtos — Developers — ⚠ verify — consulted 2026-08-27 — accepted codes, "não se aplica".
+- Categories & attributes / What is an attribute? — https://developers.mercadolivre.com.br/en_us/categories-attributes , https://developers.mercadolivre.com.br/en_us/attributes — Developers — consulted 2026-08-27 (search-indexed copy; live page returns 403 to bots) — `POST /categories/$ID/attributes/conditional` takes the full item payload and resolves which `conditional_required` attributes apply; `conditional_required` in `GET .../attributes` is only a "possibly required" flag.
 - Códigos universais — https://www.mercadolivre.com.br/codigos-universais — Mercado Livre — ⚠ verify — consulted 2026-08-27.
 - Compatibilidades de autopeças — https://developers.mercadolivre.com.br/pt_br/compatibilidades-itens-e-produtos-de-autopecas — Developers — ⚠ verify — consulted 2026-08-27 — 3 modes, ≥3 data points, mandatory categories, `/items/{MLB}/compatibilities`.
 - O status das suas fichas técnicas — https://vendedores.mercadolivre.com.br/notas/o-status-das-suas-fichas-tecnicas/ — Central de Vendedores — 2026 ⚠ verify — consulted 2026-08-27 — completeness vs relevance.
