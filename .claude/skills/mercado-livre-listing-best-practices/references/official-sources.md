@@ -24,7 +24,7 @@ rule solely on LLM prior knowledge.
 | Page | URL | source_last_updated | Rules derived (see file) |
 |---|---|---|---|
 | Publicar produtos (guia) | https://developers.mercadolivre.com.br/pt_br/publicacao-de-produtos/ | ⚠ verify | product-structure, categories |
-| User Products | https://developers.mercadolivre.com.br/pt_br/user-products | 2026-06-17 (per requester) ⚠ verify | product-structure, variations-and-user-products, titles-and-family-name |
+| User Products | https://developers.mercadolivre.com.br/pt_br/user-products | 2026-06-17 (per requester); `family_name` rules verified 2026-08-27 (search-indexed; live 403) | product-structure, variations-and-user-products, titles-and-family-name |
 | Preço por variação | https://developers.mercadolivre.com.br/pt_br/preco-variacao | 2026 ⚠ verify | variations-and-user-products, pricing-and-commercial |
 | Variations (modelo tradicional) | https://developers.mercadolivre.com.br/pt_br/variacoes | ⚠ verify | variations-and-user-products |
 | Categorias e Atributos | https://developers.mercadolivre.com.br/pt_br/categorias-e-atributos-veiculos | ⚠ verify | categories, attributes |
@@ -40,7 +40,7 @@ rule solely on LLM prior knowledge.
 | Informe compatibilidades | https://developers.mercadolivre.com.br/informe-compatibilidades | ⚠ verify | attributes (compatibility) |
 | Sincronização e modificação de publicações | https://developers.mercadolivre.com.br/pt_br/produto-sincronizacao-de-publicacoes | ⚠ verify | product-structure |
 | Como criar anúncios eficientes | https://vendedores.mercadolivre.com.br/nota/como-criar-anuncios-eficientes-no-mercado-livre | 2026 ⚠ verify | seo-and-discovery, titles-and-family-name, images |
-| Como criar um título atrativo | https://vendedores.mercadolivre.com.br/nota/como-criar-um-titulo-atrativo | 2026 ⚠ verify | titles-and-family-name |
+| Como fazer um bom título para o seu anúncio | https://vendedores.mercadolivre.com.br/nota/como-criar-um-titulo-atrativo | verified 2026-08-27 (search-indexed; live 403) — structure produto+marca+modelo+especificações, spaces not punctuation, exclude other-services info / colour / size / condition / other-brand references; **no 40-character rule stated** | titles-and-family-name |
 | O status das suas fichas técnicas | https://vendedores.mercadolivre.com.br/notas/o-status-das-suas-fichas-tecnicas/ | 2026 ⚠ verify | attributes, seo-and-discovery |
 | Códigos universais | https://www.mercadolivre.com.br/codigos-universais | ⚠ verify | attributes |
 | Catálogo / Buy Box (Central) | https://vendedores.mercadolivre.com.br/ (buscar "catálogo") | ⚠ verify | catalog |
@@ -55,8 +55,9 @@ rule solely on LLM prior knowledge.
   must be a **leaf** (`children_categories` empty) with
   `settings.listing_allowed = true` to host a listing; also `path_from_root`,
   `settings.catalog_domain`, `settings.max_pictures_per_item(_var)`,
-  `settings.max_title_length`, variation flags (read, never hardcode).
-  Verified 2026-08-27.
+  `settings.max_title_length` (the manual-title limit), variation flags (read,
+  never hardcode). Verified 2026-08-27. For User Products, `family_name` must be
+  ≤ the **domain's** `max_title_length` — verified 2026-08-27 (search-indexed).
 - `GET /categories/$CATEGORY_ID/attributes` — the **static** attribute model:
   attribute ids, `values`, `tags` (`required`, `new_required`,
   `conditional_required`, `catalog_required`), `PARENT_PK`, `CHILD_PK`. Also the
