@@ -32,22 +32,89 @@ audit to a human or to a separate publishing pipeline.
 
 ## 2. Required inputs
 
-Minimum `ProductMaster` fields the agent needs before starting:
+Not every `ProductMaster` field is needed to draft listing **content**. Sort each
+field into one of four layers; the layer decides whether a gap blocks, needs
+review, or is only a warning. Do not treat conditional or commercial fields as
+universally mandatory — that creates false blockers.
 
-- Product type / what the product physically is
-- Brand, model / reference, manufacturer part number (if any)
-- GTIN / EAN / UPC (or an explicit "does not exist / does not apply")
-- Key physical attributes: material, dimensions, weight, color(s), capacity, power, etc.
-- Variation axes (color, size, voltage, …) and the SKU list with per-variant stock
-- What is included in the box / what is NOT included
-- Compatibility data (for auto parts, accessories, electronics)
-- Condition (new / used / refurbished)
-- Source images (real photos of the real product / variant)
-- Commercial inputs: cost, target price, listing type intent, shipping mode, availability lead time
-- Any certifications, warranty terms, legal/regulatory notes
+### A. CORE_REQUIRED — identify and truthfully represent the product
 
-If a required field is missing, record it in `missing_information` and mark the
-affected audit dimension — do not invent it.
+A gap here is a **BLOCKER** for content creation.
+
+- What the product physically is (type / function).
+- The factual characteristics that distinguish *this* item from similar ones.
+- Condition (new / used / refurbished) when it is not already unambiguous.
+- When variants exist: the variation axes **and each variant's value on those
+  axes**, plus a stable per-variant identifier (SKU or internal id) so variants
+  are never mixed (`references/variations-and-user-products.md`). Per-variant
+  media and stock belong to layers B/C, but the axis values that tell the
+  variants apart are core.
+- Evidence/source for every factual claim (Evidence rule below).
+
+`brand` and `model` are **not** here: a genuine generic/unbranded product has no
+commercial brand. They sit in layer B.
+
+### B. CONDITIONAL_REQUIRED — required only when the context calls for it
+
+Required *if and when applicable*. Resolve the real requirement dynamically
+(category attributes, `POST /categories/$CATEGORY_ID/attributes/conditional`,
+catalog rules, compatibility rules, logistics) — never as a global rule.
+
+- Brand, model / reference, MPN — when the product is branded and/or the category
+  requires them.
+- GTIN / EAN / UPC — may be required, exempt, or unsupported depending on
+  category/product state. Here, only classify it as context-dependent; semantics
+  are handled in a later correction. Never a blanket global requirement.
+- Dimensions, weight — when category attributes or the shipping mode require them;
+  not "every ProductMaster must include dimensions".
+- Compatibility data — for categories where compatibility is required/mandatory.
+- Certifications, warranty terms, regulatory data — only when the category is
+  regulated or the claim is being made. Never invented to fill the field.
+- Non-axis variant attributes and per-variant media/stock — when variants exist
+  (the distinguishing axis values themselves are CORE, layer A).
+- "What is / isn't in the box" — when box contents are not obvious and a wrong
+  assumption would mislead the buyer.
+- Source images — required to **generate or edit product imagery** and to
+  validate Product Identity; **not** required to draft a text-only listing from
+  verified technical data.
+
+### C. PUBLICATION_REQUIRED — not needed to draft, needed before publishing
+
+A gap here does not block the draft; it is recorded and surfaced as a
+publication-readiness gap (`REVIEW` at most), gated hard only at the separate
+publish step.
+
+- Price, currency, listing type.
+- Stock / availability, handling / lead time.
+- Shipping / logistics settings, seller-account context.
+- Any marketplace field `POST /items/validate` requires that is not covered above.
+
+### D. COMMERCIAL_OPTIONAL — useful for pricing/strategy, never required for content
+
+Missing data here **never** blocks content creation. It produces a **WARNING**
+and marks the matching analysis unavailable.
+
+- Acquisition cost, landed cost.
+- Target margin / contribution margin, internal profitability thresholds.
+- Target price, competitor price targets, promotional strategy.
+
+Missing acquisition cost → `WARNING — pricing/profitability analysis unavailable`,
+never `BLOCKER — cannot create listing`.
+
+### Recording gaps
+
+For every gap add a `missing_information` entry carrying `field`,
+`requirement_type` (`CORE_REQUIRED` | `CONDITIONAL_REQUIRED` |
+`PUBLICATION_REQUIRED` | `COMMERCIAL_OPTIONAL`), `reason`, and `blocks_content`
+(true only for a CORE_REQUIRED gap, or a CONDITIONAL_REQUIRED gap the
+category/API confirms mandatory). Mark the affected audit dimension. Never invent
+a value to close a gap.
+
+**Evidence rule (unchanged):** a field being *absent* (`MISSING`) is different
+from a field holding an *unsupported* claim (`UNSUPPORTED`) — no material value =
+MISSING; `Material = TR90` with no source = UNSUPPORTED. Both are handled,
+differently, per `references/attributes.md` §evidence. The presence of a value is
+never by itself evidence.
 
 ## 3. Rule classification (use these tags everywhere)
 
@@ -115,15 +182,20 @@ conflict is flagged for human review.
   will succeed or that the content is correct. (OFFICIAL — verified 2026-08-27)
 
 If the API/MCP is unavailable, every dependent decision goes into
-`dynamic_checks_required` and the audit cannot return `PASS`.
+`dynamic_checks_required`. Those checks are **pending**, not failed: the audit is
+`REVIEW` (not `FAIL`) and cannot reach `PASS` until they are executed (§8).
 
 ## 6. Listing creation workflow
 
 Follow in order. Each step writes into the draft and can raise audit findings.
 
-1. **Evidence validation** — classify every ProductMaster field as CONFIRMED /
-   INFERRED / MISSING / CONFLICTING / UNSUPPORTED (`references/attributes.md` §evidence).
-   CONFLICTING between sources → stop and flag for human review.
+1. **Evidence + requirement validation** — classify every ProductMaster field by
+   evidence (CONFIRMED / INFERRED / MISSING / CONFLICTING / UNSUPPORTED,
+   `references/attributes.md` §evidence) and by requirement layer (§2 A–D).
+   CONFLICTING between sources → stop and flag for human review. Only a
+   CORE_REQUIRED gap — or a CONDITIONAL_REQUIRED gap confirmed mandatory by the
+   category/API — blocks content creation; PUBLICATION_REQUIRED gaps are
+   review-only and COMMERCIAL_OPTIONAL gaps are warnings.
 2. **Product classification** — what is it, physically; which domain-relevant traits matter.
 3. **Category / domain** — run the predictor; confirm the domain; pull the attribute set (DYNAMIC).
 4. **Catalog check** — is there a `catalog_product_id` match? If yes, decide
@@ -171,17 +243,47 @@ conflict is a BLOCKER):
 ProductMaster ⇄ Category ⇄ Catalog ⇄ family_name/Title ⇄ Attributes ⇄ Description ⇄ Images ⇄ Variants
 ```
 
-## 8. Blocking criteria (status = FAIL)
+## 8. Status rules
+
+An unresolved dynamic check has two distinct states; they resolve to different
+statuses:
+
+- **Pending** — the check has not been executed/resolved yet because marketplace
+  context or API data is still missing. This is `REVIEW`, never `FAIL`.
+- **Executed and failed** — the check ran and confirms a mandatory
+  category/API/publication requirement the listing does not satisfy. This is a
+  `BLOCKER` → `FAIL`.
+
+### `FAIL` — any of:
 
 - Any `BLOCKER` finding (e.g. product-data conflict between fields, wrong-variant image, invented GTIN/spec).
+- A **CORE_REQUIRED** ProductMaster gap (§2 A).
+- A dynamic check that has been **executed** and confirms a mandatory requirement
+  the listing does not satisfy — including a **CONDITIONAL_REQUIRED** field (§2 B)
+  the category/API confirms mandatory and that is unmet.
 - Category not confirmed via predictor, or required/new_required attributes unresolved.
 - Title crafted for a flow where the title is ML-generated, or a hardcoded limit used where a DYNAMIC one exists.
 - Images violating an OFFICIAL constraint, or exceeding the category's DYNAMIC max.
 - Unanswered "reasonable misinterpretation" question from return prevention.
-- `dynamic_checks_required` is non-empty and unresolved.
 
-`REVIEW` = no blockers but ≥1 CRITICAL or missing information that affects accuracy.
-`PASS` = no blockers, no CRITICAL, all DYNAMIC checks resolved.
+### `REVIEW` — no `FAIL` condition, but any of:
+
+- ≥1 CRITICAL finding.
+- `dynamic_checks_required` is non-empty because a check is still **pending**
+  category/API context (not yet executed) — a CONDITIONAL_REQUIRED gap awaiting
+  that context is here, not in `FAIL`.
+- A **PUBLICATION_REQUIRED** gap (§2 C — a publication-readiness gap).
+
+### `PASS` — all of:
+
+- No `FAIL` condition and no CRITICAL finding.
+- `dynamic_checks_required` is empty: every DYNAMIC check needed for publication
+  has been executed and satisfied.
+- Evidence clean.
+
+Unresolved **COMMERCIAL_OPTIONAL** gaps (§2 D) stay as WARNINGs and never block
+`PASS`. Missing ProductMaster data does not by itself cause `FAIL` when it is
+PUBLICATION_REQUIRED or COMMERCIAL_OPTIONAL.
 
 ## 9. Output format
 
@@ -205,6 +307,8 @@ ProductMaster ⇄ Category ⇄ Catalog ⇄ family_name/Title ⇄ Attributes ⇄ 
 ```
 
 Each finding: `{ "dimension", "severity": "BLOCKER|CRITICAL|WARNING|RECOMMENDATION", "issue", "evidence", "fix", "rule_tag": "OFFICIAL|DYNAMIC|INTERNAL|EXPERIMENTAL|LEARNED", "source" }`.
+
+Each `missing_information` entry: `{ "field", "requirement_type": "CORE_REQUIRED|CONDITIONAL_REQUIRED|PUBLICATION_REQUIRED|COMMERCIAL_OPTIONAL", "reason", "blocks_content": true|false }` (§2). COMMERCIAL_OPTIONAL entries always have `blocks_content: false`.
 
 Alongside the JSON, emit the listing draft: model (Item / User Product),
 `category_id`, `family_name` and/or title, attributes (id → value), description

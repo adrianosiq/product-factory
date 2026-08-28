@@ -73,6 +73,12 @@ Tag every ProductMaster fact before using it:
 Only CONFIRMED (and vetted INFERRED) facts may appear as attribute values or
 description statements.
 
+Evidence class answers *"can this value be used?"*; the requirement layer
+(`SKILL.md` §2) answers *"does a gap here block?"*. They are independent: a
+CORE_REQUIRED field that is MISSING blocks content creation; a COMMERCIAL_OPTIONAL
+field that is MISSING only warns; either way a value with no backing is
+UNSUPPORTED and is dropped, never guessed.
+
 ## Audit checks (`ATTRIBUTES`)
 
 - [ ] All required / new_required filled; applicable conditional_required resolved via `POST .../attributes/conditional` and filled.
