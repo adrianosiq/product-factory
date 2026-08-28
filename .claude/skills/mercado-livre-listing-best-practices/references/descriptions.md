@@ -41,6 +41,11 @@ Use the sections that apply to the product; keep them short and scannable:
 - Statements that contradict the attributes, images or `family_name`/title.
 - Prices, external links, contact info, off-platform sales, promo countdowns.
 
+Claims safety, prohibited/regulated products, brand/authenticity and
+contact/external-diversion policy are the compliance layer — `compliance.md`.
+An unsupported **removable** claim is dropped (`CONTENT_STATUS` may stay PASS);
+an unsupported **essential** claim → REVIEW/FAIL by evidence.
+
 ## Audit checks (`DESCRIPTION`)
 
 - [ ] `plain_text`, no HTML, passes format validation.

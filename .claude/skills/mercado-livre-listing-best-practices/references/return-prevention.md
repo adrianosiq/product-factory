@@ -42,8 +42,10 @@ description and images:
 > different product from the one they will actually receive?"**
 
 If yes → produce a specific correction (which surface, what change) and raise a
-finding. A listing with an unanswered "yes" here **cannot pass the audit**
-(BLOCKER).
+finding. A listing with an unanswered "yes" here → **BLOCKER**
+(`affects: [CONTENT]`, and `[PUBLICATION]` where the mismatch is also a
+policy/moderation risk — `compliance.md`). A material misleading omission is at
+once a content, compliance and quality problem.
 
 ## Common failure patterns to catch
 

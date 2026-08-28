@@ -20,8 +20,21 @@ comes before and feeds more than the description.)
    tag from `GET /categories/$CATEGORY_ID/attributes` only flags an attribute as
    *possibly* required; this POST call decides it for the specific item.
 4. Variation attributes (`PARENT_PK` / `CHILD_PK`) — see `categories.md`.
-5. `catalog_required` if associating to catalog.
-6. All remaining attributes the ProductMaster supports (recommended + optional).
+5. `catalog_required` / `catalog_listing_required` if associating to catalog.
+6. **Technical-spec completeness** — `GET /categories/$CATEGORY_ID/technical_specs/input`.
+   These improve completeness / search ranking but are **not** publication
+   blockers: missing them → the `incomplete_technical_specs` tag + a ranking
+   penalty → `QUALITY_STATUS = REVIEW`, `PUBLICATION_STATUS` may still PASS. Do
+   not treat every technical-spec recommendation as a hard requirement.
+   (OFFICIAL — verified 2026-08-27, search-indexed.)
+7. All remaining attributes the ProductMaster supports (recommended + optional).
+
+Requirement vs quality: `required` (in `.../attributes`) missing after category
+resolution → `PUBLICATION_STATUS = FAIL`; `conditional_required` pending → REVIEW,
+executed-and-unmet → FAIL; technical-spec attributes → quality only. Certifications
+/ regulatory data are `CONDITIONAL_REQUIRED` whose *applicability* is a compliance
+question (`compliance.md` §4) — never inferred from generic product type, never
+invented.
 
 ## Identity attributes — never invent
 
