@@ -62,9 +62,10 @@ catalog rules, compatibility rules, logistics) — never as a global rule.
 
 - Brand, model / reference, MPN — when the product is branded and/or the category
   requires them.
-- GTIN / EAN / UPC — may be required, exempt, or unsupported depending on
-  category/product state. Here, only classify it as context-dependent; semantics
-  are handled in a later correction. Never a blanket global requirement.
+- Product identifier (GTIN / EAN / UPC / JAN / ISBN / ITF-14) — required, exempt
+  or unsupported depending on category/product state; never a blanket global
+  requirement. Identifier states, the `EMPTY_GTIN_REASON` absence mechanism and
+  the evidence rules are in `references/attributes.md` §"Product identifiers".
 - Dimensions, weight — when category attributes or the shipping mode require them;
   not "every ProductMaster must include dimensions".
 - Compatibility data — for categories where compatibility is required/mandatory.
@@ -141,7 +142,7 @@ conflict is flagged for human review.
 | Category prediction, domains, attribute tags, PARENT_PK/CHILD_PK | `references/categories.md` |
 | Title rules; `family_name` when title is generated | `references/titles-and-family-name.md` |
 | How products get found; what is OFFICIAL vs strategy | `references/seo-and-discovery.md` |
-| Ficha técnica, GTIN, "não se aplica", structured-first | `references/attributes.md` |
+| Ficha técnica, product identifiers (GTIN / `EMPTY_GTIN_REASON`), structured-first | `references/attributes.md` |
 | Image formats, resolution, per-category limits, per-variant images | `references/images.md` |
 | Description structure, plain_text, what to avoid | `references/descriptions.md` |
 | Variations in the new model; migration from `variations[]` | `references/variations-and-user-products.md` |
@@ -163,10 +164,17 @@ conflict is flagged for human review.
 
 **Call the ML API / MCP** (never guess) for every `DYNAMIC` value:
 
-- `category_id` via the category predictor
+- `category_id` — **discover** a candidate (predictor
+  `GET /sites/MLB/domain_discovery/search`, catalog, or a revalidated internal
+  mapping) then **validate** it (`GET /categories/$CATEGORY_ID`: leaf +
+  `settings.listing_allowed`; domain + attribute set fit the real product). The
+  predictor is a discovery tool, not the sole authority
+  (`references/categories.md` §1).
 - `GET /categories/$CATEGORY_ID/attributes` — the **static** attribute model:
   attribute ids, value lists, tags (`required`, `new_required`,
-  `conditional_required`, `catalog_required`), `PARENT_PK`/`CHILD_PK`
+  `conditional_required`, `catalog_required`), `PARENT_PK`/`CHILD_PK`; includes
+  the product-identifier attribute (`GTIN`, …) and `EMPTY_GTIN_REASON` with its
+  allowed `values[]`
 - `POST /categories/$CATEGORY_ID/attributes/conditional` — resolves which
   `conditional_required` attributes are actually required **for this item**. The
   request body is the assembled item payload (category, price, condition,
@@ -197,7 +205,10 @@ Follow in order. Each step writes into the draft and can raise audit findings.
    category/API — blocks content creation; PUBLICATION_REQUIRED gaps are
    review-only and COMMERCIAL_OPTIONAL gaps are warnings.
 2. **Product classification** — what is it, physically; which domain-relevant traits matter.
-3. **Category / domain** — run the predictor; confirm the domain; pull the attribute set (DYNAMIC).
+3. **Category / domain** — discover candidates (predictor / catalog / revalidated
+   mapping), then **validate** the chosen one (leaf, `listing_allowed`, domain +
+   attributes fit the real product); pull the attribute set (DYNAMIC). See
+   `references/categories.md` §1.
 4. **Catalog check** — is there a `catalog_product_id` match? If yes, decide
    associate-to-catalog vs independent listing before writing any content (`references/catalog.md`).
 5. **Dynamic attributes** — resolve required / new_required / conditional_required;
@@ -211,8 +222,11 @@ Follow in order. Each step writes into the draft and can raise audit findings.
    - Title-is-provided flow: build the title per `references/titles-and-family-name.md` (OFFICIAL rules), respecting the category's DYNAMIC length limit.
    - Generated-title flow (User Products / UPtin): do NOT craft a title; optimize
      `family_name`, attributes and domain instead.
-9. **Attributes** — fill structured fields first; never invent GTIN/brand/model/spec;
-   use "não se aplica" only where legitimately applicable.
+9. **Attributes** — fill structured fields first; never invent a product
+   identifier (GTIN/EAN/UPC/…), brand, model or spec. For a legitimate no-GTIN
+   product use ML's `EMPTY_GTIN_REASON` mechanism (`references/attributes.md`),
+   not a literal "N/A"; use "não se aplica" only for non-identifier attributes
+   where it genuinely applies.
 10. **Description** — `plain_text`; complements the ficha técnica; structured
     sections; no keyword stuffing, no unproven claims, no invented features.
 11. **Variant strategy** — model the variants per `references/variations-and-user-products.md`;
@@ -256,12 +270,21 @@ statuses:
 
 ### `FAIL` — any of:
 
-- Any `BLOCKER` finding (e.g. product-data conflict between fields, wrong-variant image, invented GTIN/spec).
+- Any `BLOCKER` finding (e.g. product-data conflict between fields, wrong-variant image, an invented product identifier / spec).
 - A **CORE_REQUIRED** ProductMaster gap (§2 A).
 - A dynamic check that has been **executed** and confirms a mandatory requirement
   the listing does not satisfy — including a **CONDITIONAL_REQUIRED** field (§2 B)
   the category/API confirms mandatory and that is unmet.
-- Category not confirmed via predictor, or required/new_required attributes unresolved.
+- No **resolved** category, or a category whose validation was **executed** and
+  shows it unusable/wrong (not a leaf, `listing_allowed = false`, or an attribute
+  set that does not fit the product); validation ≠ "returned by the predictor"
+  (`references/categories.md` §1). A category merely *pending* validation because
+  ML data is still unavailable is REVIEW, not FAIL. Also: required/new_required
+  attributes unresolved.
+- A product identifier that is `REQUIRED_MISSING` — the category/API has
+  **confirmed** it mandatory and there is neither a provenance-backed value nor
+  an accepted `EMPTY_GTIN_REASON` (`references/attributes.md`). Requirement still
+  `CONDITIONAL_PENDING` → REVIEW, not FAIL.
 - Title crafted for a flow where the title is ML-generated, or a hardcoded limit used where a DYNAMIC one exists.
 - Images violating an OFFICIAL constraint, or exceeding the category's DYNAMIC max.
 - Unanswered "reasonable misinterpretation" question from return prevention.

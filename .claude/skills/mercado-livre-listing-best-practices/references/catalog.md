@@ -34,8 +34,9 @@ levers and on making sure you're linked to the **correct** catalog product.
    - Yes → recommend **associating to catalog**. Verify the match is truly the
      same product (same model, capacity, color scope, edition). A near-match is a
      wrong match — flag it.
-   - No → create an **independent listing**; still fill attributes/GTIN well so a
-     future catalog product can match it.
+   - No → create an **independent listing**; still fill attributes and the
+     product identifier (where one legitimately exists — `attributes.md`) well so
+     a future catalog product can match it.
 3. Some categories/products **must** go through catalog (catalog-mandatory
    domains) — check the category settings (DYNAMIC). If mandatory and no match
    exists, escalate.
