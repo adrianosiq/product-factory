@@ -37,9 +37,17 @@ levers and on making sure you're linked to the **correct** catalog product.
    - No → create an **independent listing**; still fill attributes and the
      product identifier (where one legitimately exists — `attributes.md`) well so
      a future catalog product can match it.
-3. Some categories/products **must** go through catalog (catalog-mandatory
-   domains) — check the category settings (DYNAMIC). If mandatory and no match
-   exists, escalate.
+3. Some categories/products **must** go through catalog (DYNAMIC — check category
+   settings). Two documented forms (OFFICIAL ⚠ verify — verified 2026-08-27,
+   search-indexed; applies to MLB):
+   - **catalog-exclusive** domain → a marketplace-only publication is moderated
+     `under_review` with `catalog_only_restricted`; sell/manage via catalog only.
+     Attempting an incompatible marketplace-only publication before publishing →
+     `PUBLICATION_STATUS = FAIL`.
+   - **catalog-required** → publication with `catalog_listing_eligible` + the
+     catalog product's `listing_strategy: catalog_required` → ML moderates to
+     `opt_obey` (requests catalog opt-in). Pending resolution → REVIEW.
+   If mandatory and no match exists, escalate.
 4. If associating: fill `catalog_required` attributes; expect title/description/
    main images to be catalog-driven.
 
@@ -64,4 +72,5 @@ and confirm against current ML docs.
 
 - Identificadores de produtos — https://developers.mercadolivre.com.br/pt_br/identificadores-de-produtos — Developers — ⚠ verify — consulted 2026-08-27 — `catalog_product_id`, catalog matching.
 - Publicar produtos (guia) — https://developers.mercadolivre.com.br/pt_br/publicacao-de-produtos/ — Developers — ⚠ verify — consulted 2026-08-27 — catalog listings.
+- Catalog required listings / eligibility — https://developers.mercadolivre.com.br/pt_br/publicacoes-necessarias-do-catalogo , https://developers.mercadolivre.com.br/en_us/catalog-eligibility — Developers — verified 2026-08-27 (search-indexed; live 403) — catalog-exclusive (`catalog_only_restricted`, `under_review`) vs catalog-required (`catalog_listing_eligible` + `listing_strategy: catalog_required` → `opt_obey`); applies to MLB.
 - External context only (not authoritative): ideris.com.br, upseller.com, vencebox.com.br — Buy Box levers and catalog behavior (EXPERIMENTAL/INTERNAL).

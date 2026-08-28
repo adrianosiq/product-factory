@@ -344,9 +344,11 @@ checks (`quality-audit.md`).
 - Warehouse / location mapping unavailable.
 - Legacy-vs-UP status uncertain.
 
-Content readiness is separate: a ProductMaster can be **content-ready** while
-stock publication is not yet executable (Correction 02 layers; Correction 07 owns
-the dual-status normalization).
+These map to the readiness dimensions (`quality-audit.md` §1): publication-model
+`UNRESOLVED` → `PUBLICATION_STATUS` / `EXECUTION_STATUS` = REVIEW; inventory-mode
+`UNRESOLVED` → `EXECUTION_STATUS` = REVIEW; a confirmed incompatible stock write →
+`EXECUTION_STATUS` = FAIL. None of this affects `CONTENT_STATUS` — a ProductMaster
+can be content-ready while stock publication is not yet executable.
 
 ## 17. Dynamic checks (Correction 02A semantics — pending → REVIEW; executed-unmet → FAIL)
 

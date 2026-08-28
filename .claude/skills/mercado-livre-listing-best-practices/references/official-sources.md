@@ -49,6 +49,14 @@ rule solely on LLM prior knowledge.
 | Como fazer um bom título para o seu anúncio | https://vendedores.mercadolivre.com.br/nota/como-criar-um-titulo-atrativo | verified 2026-08-27 (search-indexed; live 403) — structure produto+marca+modelo+especificações, spaces not punctuation, exclude other-services info / colour / size / condition / other-brand references; **no 40-character rule stated** | titles-and-family-name |
 | O status das suas fichas técnicas | https://vendedores.mercadolivre.com.br/notas/o-status-das-suas-fichas-tecnicas/ | 2026 ⚠ verify | attributes, seo-and-discovery |
 | Códigos universais | https://www.mercadolivre.com.br/codigos-universais | ⚠ verify | attributes |
+| Qualidade das publicações / listing `/performance` | https://developers.mercadolivre.com.br/pt_br/qualidade-das-publicacoes | verified 2026-08-27 (search-indexed; live 403) — `/health` discontinued → `GET /item/$ITEM_ID/performance`; `level_wording`, entity `mode` OPPORTUNITY / WARNING | quality-audit, compliance |
+| Technical specs input / `incomplete_technical_specs` | https://developers.mercadolivre.com.br/en_us/attributes (`GET /categories/$CATEGORY_ID/technical_specs/input`) | verified 2026-08-27 (search-indexed; live 403) — `required` in `.../attributes` blocks publication; technical-spec attributes affect ranking only, tag `incomplete_technical_specs` | quality-audit, attributes |
+| Manage moderations / `/moderations/last_moderation` / `/infractions` | https://developers.mercadolivre.com.br/en_us/manage-moderations | verified 2026-08-27 (search-indexed; live 403) — `reason` always / `remedy` only when recoverable; statuses `active` / `paused` / `inactive`; preventive pauses; `/infractions` covers items/questions/answers/reviews | compliance, quality-audit |
+| Catalog required listings / `catalog_only_restricted` | https://developers.mercadolivre.com.br/pt_br/publicacoes-necessarias-do-catalogo , https://developers.mercadolivre.com.br/en_us/catalog-eligibility | verified 2026-08-27 (search-indexed; live 403) — catalog-exclusive → `under_review` + `catalog_only_restricted`; catalog-required → `catalog_listing_eligible` + `listing_strategy: catalog_required` → `opt_obey`; applies to MLB | compliance, catalog |
+| Shipment handling / SELLER_PACKAGE_* (ME2) | https://developers.mercadolivre.com.br/en_us/shipment-handling | verified 2026-08-27 (search-indexed; live 403) — `SELLER_PACKAGE_HEIGHT/LENGTH/WIDTH/WEIGHT` mandatory for ME2 in some categories, not always in category attributes; cm + grams, real values; missing → moderated / not published | compliance, quality-audit |
+| Produtos proibidos / Práticas proibidas / Propriedade intelectual | https://www.mercadolivre.com.br/ajuda/Produtos-proibidos_1029 , https://www.mercadolivre.com.br/ajuda/contornar_estrutura_programas_4822 , https://www.mercadolivre.com.br/ajuda/1078 , https://www.mercadolivre.com.br/ajuda/Propriedade-roubada_1034 | ⚠ verify (search-indexed 2026-08-27) — prohibited-product categories; non-compliance → removal + account penalties | compliance |
+| Normas da ANVISA (regulated products) | https://vendedores.mercadolivre.com.br/nota/como-cumprir-as-normas-da-anvisa-e-evitar-o-cancelamento-do-seu-anuncio | ⚠ verify (search-indexed 2026-08-27) — regulated-product compliance example | compliance |
+| Brand Protection Program | https://www.mercadolivre.com.br/ajuda/Programa-de-Prote%C3%A7ao-Propriedade-Intelectual_2099 , https://www.mercadolivre.com.br/brandprotection/enforcement | ⚠ verify (search-indexed 2026-08-27) — rights-holder report + seller response (4 calendar days; licence doc PDF/PNG/JPG ≤ 5 MB); no reply → auto-removal | compliance |
 | Catálogo / Buy Box (Central) | https://vendedores.mercadolivre.com.br/ (buscar "catálogo") | ⚠ verify | catalog |
 
 ## API endpoints referenced by this Skill (DYNAMIC)
@@ -72,6 +80,17 @@ rule solely on LLM prior knowledge.
 - `POST /categories/$CATEGORY_ID/attributes/conditional` — send the assembled
   item payload; returns which `conditional_required` attributes actually apply
   for that item (not a static lookup). Verified 2026-08-27.
+- `GET /categories/$CATEGORY_ID/technical_specs/input` — technical-completeness
+  attributes (search-ranking; `incomplete_technical_specs`), distinct from
+  publication-blocking `required`. → `QUALITY_STATUS`. Verified 2026-08-27
+  (search-indexed).
+- `GET /item/$ITEM_ID/performance` — post-publication listing quality (score,
+  `level_wording`, `OPPORTUNITY`/`WARNING` entities). **Replaces `/health`.**
+  → `QUALITY_STATUS`. Verified 2026-08-27 (search-indexed).
+- `GET /moderations/last_moderation` / `/infractions` — post-publication
+  enforcement state; `reason` (always) + `remedy` (only when recoverable);
+  `active` / `paused` / `inactive`. → `EXECUTION_STATUS` / compliance. Verified
+  2026-08-27 (search-indexed).
 - `GET /products/$CATALOG_PRODUCT_ID` and catalog search — catalog match
 - `POST /items/validate` — pre-publish technical validation of a listing
   payload; HTTP 204 when no problems are found, HTTP 400 with a `cause[]` array

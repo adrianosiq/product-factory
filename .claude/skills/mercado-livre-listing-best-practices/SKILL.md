@@ -151,7 +151,8 @@ conflict is flagged for human review.
 | Analyzing competitor listings without copying | `references/competitor-research.md` |
 | Mining reviews/questions of similar products | `references/review-mining.md` |
 | Reducing wrong buyer expectations before finishing | `references/return-prevention.md` |
-| Final audit dimensions, scoring, output JSON | `references/quality-audit.md` |
+| Prohibited/restricted/regulated products, claims safety, brand/IP, moderation, `/performance` | `references/compliance.md` |
+| Readiness dimensions, aggregation, gates, audit output JSON | `references/quality-audit.md` |
 
 ## 5. When to research live docs / call the API/MCP
 
@@ -183,15 +184,30 @@ conflict is flagged for human review.
 - `GET /categories/$CATEGORY_ID` — category `settings`: `max_title_length`,
   `max_pictures_per_item`, `max_pictures_per_item_var`, variation rules,
   `buying_mode`, listing types
-- catalog match: does a `catalog_product_id` already exist for this product
+- `GET /categories/$CATEGORY_ID/technical_specs/input` — attributes that drive
+  **technical completeness / search ranking**, distinct from `required`
+  (publication-blocking). Missing these → the `incomplete_technical_specs` tag +
+  a ranking penalty → `QUALITY_STATUS`, not `PUBLICATION_STATUS`.
+- catalog match: does a `catalog_product_id` already exist for this product;
+  catalog-exclusive / catalog-required domains (`catalog_only_restricted`,
+  `listing_strategy: catalog_required`) — `references/compliance.md`
 - `POST /items/validate` — pre-publish technical validation of the assembled
   payload (HTTP 204 = no problems found; HTTP 400 = a `cause[]` list of
-  errors/warnings). Optional; passing it is not a guarantee that publication
-  will succeed or that the content is correct. (OFFICIAL — verified 2026-08-27)
+  errors/warnings). Optional; a confirmed **error** → `PUBLICATION_STATUS = FAIL`,
+  a **warning** → REVIEW. Not a guarantee of acceptance, compliance, or moderation
+  clearance. (OFFICIAL — verified 2026-08-27)
+- `GET /item/$ITEM_ID/performance` — post-publication listing-quality signal
+  (score, `level_wording`, `OPPORTUNITY`/`WARNING` entities). **Replaces the
+  deprecated `/health`.** Feeds `QUALITY_STATUS` only.
+- `GET /moderations/last_moderation` and `/infractions` — post-publication
+  marketplace enforcement state (`reason` + `remedy`; `active`/`paused`/`inactive`).
+  "No moderation" ≠ compliant. (`references/compliance.md`)
 
 If the API/MCP is unavailable, every dependent decision goes into
-`dynamic_checks_required`. Those checks are **pending**, not failed: the audit is
-`REVIEW` (not `FAIL`) and cannot reach `PASS` until they are executed (§8).
+`dynamic_checks_required`. Those checks are **pending**, not failed — they hold
+`PUBLICATION_STATUS` / `EXECUTION_STATUS` at `REVIEW` (never `FAIL`) until
+executed (§8). `CONTENT_STATUS` can still be `PASS` if product truth is
+sufficient.
 
 ## 6. Listing creation workflow
 
@@ -261,18 +277,33 @@ Follow in order. Each step writes into the draft and can raise audit findings.
     a generated image is an output, never evidence.
 13. **Return prevention** — run the checklist in `references/return-prevention.md`,
     including the mandatory ambiguity question.
-14. **Compliance** — condition rules, prohibited claims, regulated-category needs,
-    intellectual property on text and images.
-15. **Quality audit** — run `references/quality-audit.md`.
-16. **READY FOR REVIEW** — emit draft + audit JSON. Stop.
+14. **Compliance** — run `references/compliance.md`: resolve prohibited /
+    restricted / regulated status; every material claim evidence-backed;
+    brand / authenticity / IP safe; no contact info or external-diversion
+    content. Findings feed CONTENT / PUBLICATION / EXECUTION — not a fifth status.
+15. **Evaluate readiness** — `CONTENT_STATUS`, `PUBLICATION_STATUS`,
+    `EXECUTION_STATUS`, `QUALITY_STATUS` per `references/quality-audit.md`
+    (§8 below). Content generation needs only `CONTENT_STATUS = PASS`;
+    publication needs CONTENT + PUBLICATION + EXECUTION all `PASS`.
+16. **READY FOR REVIEW** — emit draft + audit JSON (all four statuses). Stop.
+    Post-publication only: enrich `QUALITY_STATUS` from `/performance` and
+    `EXECUTION_STATUS` from moderation state.
 
 ## 7. Audit workflow
 
-Score each dimension 0–100 with issues, severity and recommendations:
+The audit produces **four independent readiness dimensions** — `CONTENT_STATUS`,
+`PUBLICATION_STATUS`, `EXECUTION_STATUS`, `QUALITY_STATUS` (each `PASS` / `REVIEW`
+/ `FAIL`) — plus 0–100 scores for the twelve quality sub-dimensions that feed
+mainly `QUALITY_STATUS` (and `PUBLICATION_STATUS` where a check is a hard rule):
 
 `PRODUCT_ACCURACY`, `CATEGORY`, `CATALOG`, `FAMILY_NAME_TITLE`, `ATTRIBUTES`,
 `SEARCH_RELEVANCE`, `DESCRIPTION`, `IMAGES`, `VARIANTS`, `CONSISTENCY`,
 `RETURN_PREVENTION`, `COMPLIANCE`.
+
+Findings carry `severity` (`BLOCKER` / `CRITICAL` / `WARNING` / `RECOMMENDATION`)
+and `affects: [ CONTENT | PUBLICATION | EXECUTION | QUALITY ]`. `BLOCKER` is a
+finding severity that forces its named dimension(s) to `FAIL` — it is not a
+status. See `references/quality-audit.md` for the full model and aggregation.
 
 Cross-consistency check is mandatory (any mismatch is at least CRITICAL, a data
 conflict is a BLOCKER):
@@ -281,84 +312,55 @@ conflict is a BLOCKER):
 ProductMaster ⇄ Category ⇄ Catalog ⇄ family_name/Title ⇄ Attributes ⇄ Description ⇄ Images ⇄ Variants
 ```
 
-## 8. Status rules
+## 8. Readiness status model
 
-An unresolved dynamic check has two distinct states; they resolve to different
-statuses:
+Four **independent** dimensions, each `PASS` / `REVIEW` / `FAIL`
+(`references/quality-audit.md` §1). They answer different questions and do **not**
+collapse into one status.
 
-- **Pending** — the check has not been executed/resolved yet because marketplace
-  context or API data is still missing. This is `REVIEW`, never `FAIL`.
-- **Executed and failed** — the check ran and confirms a mandatory
-  category/API/publication requirement the listing does not satisfy. This is a
-  `BLOCKER` → `FAIL`.
+| Dimension | PASS when | Key FAIL conditions (all require a **confirmed** condition) |
+|---|---|---|
+| **`CONTENT_STATUS`** — can we generate truthful content? | product identity + CORE_REQUIRED (§2 A) + variant identities established; no material contradiction; nothing must be invented | core identity/function unknown; conflicting evidence on what is sold; a core variant identity unestablished; content needs a fabricated material fact; `IDENTITY_FAIL` on a depended-on asset; an essential unsupported claim that can't be dropped |
+| **`PUBLICATION_STATUS`** — does it meet resolved ML requirements? | every currently-resolved mandatory publication requirement satisfied | resolved `required` attribute missing; `listing_allowed = false`; confirmed required identifier absent w/o `EMPTY_GTIN_REASON`; resolved `USER_PRODUCT` flow given `variations[]` or a forbidden manual `title`; image over a confirmed hard limit / below the accepted minimum; resolved catalog-only domain given a marketplace-only publication; `/items/validate` confirmed **error**; confirmed prohibited product; confirmed applicable regulated requirement with missing evidence; missing `SELLER_PACKAGE_*` in a resolved ME2 context |
+| **`EXECUTION_STATUS`** — can we run the op for this seller/context now? | auth + seller tags + publication model + inventory mode + external mappings resolved and compatible | Multi Origem account writing `/items` `available_quantity`; non-seller / invented stock location; incompatible publication model; operation prohibited by current moderation state; needed API capability absent; a permanently-inactive listing required; attempted publish of a confirmed prohibited product |
+| **`QUALITY_STATUS`** — how complete/optimised beyond bare validity? | no known material quality deficiency | *rare* — a defect severe enough to make the listing misleading/unsafe, or a confirmed hard moderation state. Most quality gaps are **REVIEW**, not FAIL |
 
-### `FAIL` — any of:
+**Pending vs executed (Correction 02A, unchanged):** a dynamic check *pending* →
+`REVIEW`; *executed and confirms a mandatory incompatibility* → `BLOCKER` →
+`FAIL`. **Never FAIL because something has not been checked.**
 
-- Any `BLOCKER` finding (e.g. product-data conflict between fields, wrong-variant image, an invented product identifier / spec).
-- A **CORE_REQUIRED** ProductMaster gap (§2 A).
-- A dynamic check that has been **executed** and confirms a mandatory requirement
-  the listing does not satisfy — including a **CONDITIONAL_REQUIRED** field (§2 B)
-  the category/API confirms mandatory and that is unmet.
-- No **resolved** category, or a category whose validation was **executed** and
-  shows it unusable/wrong (not a leaf, `listing_allowed = false`, or an attribute
-  set that does not fit the product); validation ≠ "returned by the predictor"
-  (`references/categories.md` §1). A category merely *pending* validation because
-  ML data is still unavailable is REVIEW, not FAIL. Also: required/new_required
-  attributes unresolved.
-- A product identifier that is `REQUIRED_MISSING` — the category/API has
-  **confirmed** it mandatory and there is neither a provenance-backed value nor
-  an accepted `EMPTY_GTIN_REASON` (`references/attributes.md`). Requirement still
-  `CONDITIONAL_PENDING` → REVIEW, not FAIL.
-- A manual `title` crafted/sent in a flow where the current API **generates** it
-  (title mode resolved and incompatible), a required generated-title /
-  `family_name` mechanism violated, or an invented brand/model in the
-  title/`family_name`. Title mode merely *unresolved* → REVIEW, not FAIL
-  (`references/titles-and-family-name.md` §1).
-- A hardcoded title/`family_name` length used where a DYNAMIC `max_title_length` exists.
-- A **resolved incompatible marketplace write** (`references/variations-and-user-products.md` §16):
-  `variations[]` for a resolved `user_product_seller`; `/items` `available_quantity`
-  for a resolved **Multi Origem** inventory mode (not a blocker for a User Product
-  that is not Multi Origem); a `MULTI_ORIGIN_SINGLE_WAREHOUSE` seller spanning
-  multiple warehouse/network-node contexts; an MLB `selling_address` stock write
-  instead of `seller_warehouse`; another variant's `user_product_id` or Items
-  mixed across User Products; an invented / non-seller stock-location id; an
-  invented or resolved-conflicting `PARENT_PK` / `CHILD_PK`; a required `CHILD_PK`
-  variant value missing after an executed check. Model or inventory mode merely
-  *unresolved* → REVIEW, not FAIL.
-- An image breaking a **confirmed hard** ML rule (unsupported format, below the
-  accepted minimum, over the size cap, over the resolved category max count, or a
-  cover-photo moderation rule for the category), or a **`IDENTITY_FAIL`** —
-  geometry / colour / material / component / variant misrepresented, an invented
-  feature, or an image contradicting ProductMaster (`references/images.md`).
-  Missing an *only-recommended* spec (1200×1200, ~95%, RGB) is a WARNING;
-  `IDENTITY_REVIEW` / commercial-gallery gaps are REVIEW/WARNING, not FAIL.
-- Unanswered "reasonable misinterpretation" question from return prevention.
+**Aggregation, per dimension:** any applicable BLOCKER / confirmed FAIL → `FAIL`;
+else any applicable REVIEW / CRITICAL → `REVIEW`; else `PASS`. Warnings alone
+keep CONTENT / PUBLICATION / EXECUTION at `PASS`; a **material** warning →
+`QUALITY_STATUS = REVIEW`. `COMMERCIAL_OPTIONAL` gaps (§2 D) are WARNINGs only.
 
-### `REVIEW` — no `FAIL` condition, but any of:
+**Requirement type ≠ evidence state ≠ readiness.** §2 layers say *what kind of
+input* a field is; `attributes.md` §evidence says *how strongly we know a fact*;
+this section says *is the dimension ready*. Three separate axes — a finding names
+its `affects: [ … ]` dimension(s).
 
-- ≥1 CRITICAL finding.
-- `dynamic_checks_required` is non-empty because a check is still **pending**
-  category/API context (not yet executed) — a CONDITIONAL_REQUIRED gap awaiting
-  that context is here, not in `FAIL`.
-- A **PUBLICATION_REQUIRED** gap (§2 C — a publication-readiness gap).
+**Derived compatibility `status`** (backward-compat only, not the source of
+truth): `FAIL` if any of CONTENT/PUBLICATION/EXECUTION = FAIL; else `REVIEW` if
+any dimension = REVIEW; else `PASS`.
 
-### `PASS` — all of:
-
-- No `FAIL` condition and no CRITICAL finding.
-- `dynamic_checks_required` is empty: every DYNAMIC check needed for publication
-  has been executed and satisfied.
-- Evidence clean.
-
-Unresolved **COMMERCIAL_OPTIONAL** gaps (§2 D) stay as WARNINGs and never block
-`PASS`. Missing ProductMaster data does not by itself cause `FAIL` when it is
-PUBLICATION_REQUIRED or COMMERCIAL_OPTIONAL.
+**Gates:** content generation → `CONTENT_STATUS = PASS` (the others may be
+`REVIEW`). Publication → CONTENT + PUBLICATION + EXECUTION all `PASS`
+(`QUALITY_STATUS = REVIEW` may still be acceptable). Any stricter quality bar for
+auto-publish is **INTERNAL Product Factory policy**, not an ML rule; human
+approval can resolve REVIEW but never overrides a confirmed OFFICIAL prohibition.
 
 ## 9. Output format
 
 ```json
 {
   "marketplace": "mercado_livre",
+  "audit_mode": "PRE_PUBLICATION | POST_PUBLICATION",
+  "content_status": "PASS | REVIEW | FAIL",
+  "publication_status": "PASS | REVIEW | FAIL",
+  "execution_status": "PASS | REVIEW | FAIL",
+  "quality_status": "PASS | REVIEW | FAIL",
   "status": "PASS | REVIEW | FAIL",
+  "status_note": "derived compatibility status — read the four dimensions instead",
   "scores": {
     "product_accuracy": 0, "category": 0, "catalog": 0, "family_name_title": 0,
     "attributes": 0, "search_relevance": 0, "description": 0, "images": 0,
@@ -368,13 +370,16 @@ PUBLICATION_REQUIRED or COMMERCIAL_OPTIONAL.
   "critical": [],
   "warnings": [],
   "recommendations": [],
+  "compliance_findings": [],
   "missing_information": [],
   "dynamic_checks_required": [],
   "sources_used": []
 }
 ```
 
-Each finding: `{ "dimension", "severity": "BLOCKER|CRITICAL|WARNING|RECOMMENDATION", "issue", "evidence", "fix", "rule_tag": "OFFICIAL|DYNAMIC|INTERNAL|EXPERIMENTAL|LEARNED", "source" }`.
+Each finding: `{ "code", "dimension", "severity": "BLOCKER|CRITICAL|WARNING|RECOMMENDATION", "affects": ["CONTENT"|"PUBLICATION"|"EXECUTION"|"QUALITY"], "issue", "evidence", "fix", "rule_tag": "OFFICIAL|DYNAMIC|INTERNAL|EXPERIMENTAL|LEARNED", "source" }`. Every `BLOCKER` states what failed, `affects`, evidence/source and a remedy; every REVIEW states what resolves it.
+
+Each `compliance_finding`: `{ "rule", "source", "classification": "OFFICIAL|DYNAMIC|INTERNAL|UNVERIFIED", "scope", "evidence", "status": "PASS|REVIEW|FAIL", "affects": ["CONTENT"|"PUBLICATION"|"EXECUTION"], "remedy" }` (`references/compliance.md`).
 
 Each `missing_information` entry: `{ "field", "requirement_type": "CORE_REQUIRED|CONDITIONAL_REQUIRED|PUBLICATION_REQUIRED|COMMERCIAL_OPTIONAL", "reason", "blocks_content": true|false }` (§2). COMMERCIAL_OPTIONAL entries always have `blocks_content: false`.
 

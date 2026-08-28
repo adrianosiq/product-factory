@@ -81,6 +81,9 @@ Never phrase a strategy as an ML rule.
   description.
 - Promise interest-free installments that the listing type doesn't provide.
 
+Broader marketplace-policy risk (prohibited/regulated products, claims safety,
+brand/IP, contact/external-diversion, moderation) is in `compliance.md`.
+
 ## Audit checks (part of `COMPLIANCE` + `CONSISTENCY`)
 
 - [ ] Listing type consistent with the installment/shipping claims made.
