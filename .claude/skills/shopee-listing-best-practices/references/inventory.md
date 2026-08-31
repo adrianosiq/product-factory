@@ -1,8 +1,15 @@
 # Inventory — CONSERVATIVE (major discovery gap)
 
 last_reviewed: 2026-08-28
+phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: OFFICIAL (level) — verification SEARCH_INDEXED; the BR stock/warehouse model is UNRESOLVED
+phase_02_2_note: >-
+  `product/update_stock` (`item_id`, `stock_list`) corroborated; `stock_list`
+  entries carry `model_id` when models exist. No location/warehouse dimension was
+  observed in triangulation — but absence in a summary is not proof. State stays
+  "inventory object partially verified; warehouse topology UNRESOLVED". See
+  `phase-02.2-report.md` §19–§20.
 
 ## 1. Why this file stays minimal
 

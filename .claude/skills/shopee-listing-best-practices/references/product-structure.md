@@ -1,8 +1,15 @@
 # Product / listing structure — Shop / Item / Tier Variation / Model
 
 last_reviewed: 2026-08-28
+phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: OFFICIAL (structure) — verification SEARCH_INDEXED; every API-contract detail `⚠ verify`
+phase_02_2_note: >-
+  Entity spine Shop → Item → Tier Variation → Model corroborated across two
+  independent SDKs (PARTIALLY_CONFIRMED). The persisted listing id is `item_id`;
+  some read endpoints accept it as `item_id_list` (≤ 50) or `product_id`. Models
+  are created by a **separate call** (`init_tier_variation` / `add_model`) after
+  `add_item`. See `research/shopee-api-contract/phase-02.2-report.md` §8–§10.
 
 ## 1. The entity model (current best understanding)
 
@@ -24,10 +31,13 @@ Shop  (shop_id)                                   — the seller storefront, reg
 An item with **no** variation has no models; its single sellable unit is the
 item itself (`item_id` + `item_sku`).
 
-Terminology: v2 docs mix "item" and "product" (`get_item_base_info` takes
-`item_id_list`; some integrator docs say `product_id`). Treat **item = product =
-the listing entity** in v2 unless the portal proves otherwise. "model" is the v2
-word; older v1 material says "variation".
+Terminology (Phase 02.2, `SEARCH_INDEXED` MEDIUM): v2 mixes "item" and
+"product". **The id Product Factory persists is `item_id`** — Shopee-assigned by
+`add_item`. Read endpoints take it as `item_id_list` (≤ 50 per call, per S13) or,
+in some integrator docs, as `product_id` (S14). `item = product = the listing
+entity`. "model" is the v2 word; older v1 material says "variation". A separate
+`v2.global_product.*` family exists for cross-border sellers — **out of scope**
+here; BR listings are `v2.product.*`.
 
 ## 2. Entity confidence table
 
@@ -96,6 +106,12 @@ Whether Shopee BR has any catalogue / "produto" grouping concept is
 
 ## Sources
 
+- Entity spine + lifecycle order + `item_id`/`product_id` naming (Phase 02.2) —
+  `github.com/QuoVadis86/shopee-sdk`, `github.com/congminh1254/shopee-sdk`
+  (`docs/managers/product.md`), `rollout.com` — community SDK / external —
+  consulted 2026-08-28 — `SEARCH_INDEXED`, MEDIUM; `phase-02.2-report.md` §8–§10,
+  §29 (C7). `item_status` enum values **not** re-verified this phase — still
+  `STILL_UNVERIFIED`.
 - v2 endpoint names & `item_status` enum — `github.com/wjp-letgo/shopeego` —
   community SDK — consulted 2026-08-28 — `SEARCH_INDEXED`.
 - v1 field names, `tier_index` combination semantics — `github.com/teacat/shopeego`

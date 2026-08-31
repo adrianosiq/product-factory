@@ -48,13 +48,33 @@ fetch_method_note: >-
 | S9 | `developer.inlinex.com.sg`, `rollout.com`, `api2cart.com` — integrator guides | `GLOBAL_API` | v2 paths; sign base `partner_id+path+timestamp+access_token+shop_id` HMAC-SHA256; timestamp in seconds; "store image ids not URLs" | `SEARCH_INDEXED` | 2026-08-28 | Third-party. Signature composition `⚠ verify`. |
 | S10 | `base.com`, `anymarket`, `ideris`, `maino`, `gobots`, `destraveescale`, `1001clicks`, `mambadigital` — BR integrators / educators | `BRAZIL` | title ≈255–256; description ≈5,000; image min ≈350×350, rec ≈1024×1024; EAN "obrigatório para alguns produtos"; brand mandatory attribute; 2026 stricter image moderation; penalty thresholds | `SEARCH_INDEXED` | 2026-08-28 | Numbers are LOW–MEDIUM confidence. **Never hardcode.** |
 | S11 | `blog.gs1br.org` — GS1 Brasil | `BRAZIL` | EAN/GTIN as best practice, **not** a blanket Shopee listing requirement | `SEARCH_INDEXED` | 2026-08-28 | Counterpoint to S10 on EAN requiredness. |
+| S12 | GitHub `QuoVadis86/shopee-sdk` (Go, "380+ endpoints") | `GLOBAL_API` | v2 `product` method names; region hosts incl. **`openplatform.shopee.com.br`**; dedicated `br` service (`query_shop_enrollment_status`, `query_shop_invoice_error`, block-status); sign base string | `SEARCH_INDEXED` | 2026-08-28 (Phase 02.2) | Community SDK. Names only. **Not** a contract. |
+| S13 | GitHub `congminh1254/shopee-sdk` (TS, "100% coverage") — `docs/managers/product.md`, `schemas/v2.product.*.json` | `GLOBAL_API` | ~25 v2 `product` methods → path + required params + an `open.shopee.com/documents/v2/...?module=89` locator; `product` vs `global_product` split | `SEARCH_INDEXED` | 2026-08-28 (Phase 02.2) | Highest-quality triangulation. Locators **not read**. |
+| S14 | `rollout.com` — Shopee integration guide | `GLOBAL_API` | `/api/v2` base; `get_item_base_info` param `product_id`, response `item_id`; `auth/token/get`; token 4 h | `SEARCH_INDEXED` | 2026-08-28 (Phase 02.2) | Third-party. |
+| S15 | `publicapis.io/shopee-api`, `api2cart.com` | `GLOBAL_API` | `/api/v2` base; sandbox host; `partner_id`+`partner_key`+`shop_id`+`access_token`; HMAC-SHA256; "route to the correct country endpoint" | `SEARCH_INDEXED` | 2026-08-28 (Phase 02.2) | Third-party. |
+| S16 | Centro de Educação do Vendedor — arts. **3445** ("Shopee Open API Platform \| Passo a Passo de Solicitação"), **27314** ("Open Platform Shopee: Guia Prático de Integração") | `BRAZIL` | Shopee BR **documents an Open Platform application + integration process** for sellers / integrators | `SEARCH_INDEXED` | 2026-08-28 (Phase 02.2) | Title + snippet only; body is SPA. Best BR-availability evidence to date. |
+| S17 | `geckoapi.com.br` (BR scraping-API blog, 2026) | `BRAZIL` | BR store operations use "Open Platform … Aplicação e autorização conforme o programa oficial" | `SEARCH_INDEXED` | 2026-08-28 (Phase 02.2) | Not the Open Platform itself. Framing only. |
 
 ## API resource registry
 
-The full endpoint list, auth model, BR-access risk and the dynamic-check
-registry are in `references/api-and-auth.md`. Every API row there is
-`SEARCH_INDEXED` (path only) or `UNVERIFIED` (schema). Do not treat any of them
-as a confirmed contract.
+The full endpoint list, auth model, BR-access status and the dynamic-check
+registry are in `references/api-and-auth.md`; the Phase 02.2 analysis is in
+`research/shopee-api-contract/phase-02.2-report.md` (§7, §15, §27, §29).
+
+Per-row fields to maintain (brief §43): `id`, `authority` (A–E tier),
+`scope` (`GLOBAL_API` / `BRAZIL` / `OTHER_MARKET_REFERENCE` /
+`UNRESOLVED_FOR_BRAZIL`), `verification_quality` (`LIVE` / `SEARCH_INDEXED` /
+`UNVERIFIED`), `verified_at`, `supports`, `staleness` ("re-verify before
+integration").
+
+| id | authority | scope | verification | verified_at | supports | staleness |
+|---|---|---|---|---|---|---|
+| `open.shopee.com/documents/v2/*` (doc locators) | A | `GLOBAL_API` | `UNVERIFIED` (tool-blocked + SPA) | — | the pages that must replace every reconstructed row | re-verify at integration — mandatory |
+| v2 `product` method set (S12+S13) | E | `GLOBAL_API` / `UNRESOLVED_FOR_BRAZIL` | `SEARCH_INDEXED`, MEDIUM | 2026-08-28 | endpoint names, paths, key params, lifecycle order | re-verify before integration |
+| auth model (S12+S14+S15) | D/E | `GLOBAL_API` | `SEARCH_INDEXED`, MEDIUM | 2026-08-28 | OAuth flow, token lifetimes, HMAC-SHA256, `/api/v2` | re-verify signing before any client |
+| Brazil host `openplatform.shopee.com.br` (S12) | E | `BRAZIL` | `SEARCH_INDEXED`, LOW (one source) | 2026-08-28 | a BR region endpoint exists | corroborate |
+| BR Open Platform application/integration (S16) | B | `BRAZIL` | `SEARCH_INDEXED` (title/snippet) | 2026-08-28 | BR sellers have a documented Open Platform application path | fetch article bodies |
+| `get_item_limit` scope | E | `GLOBAL_API` | `SEARCH_INDEXED`, **conflicting** | 2026-08-28 | possibly a shop listing *quota*, not field limits | resolve before locking numeric limits |
 
 ## Re-verification triggers
 
@@ -63,8 +83,14 @@ Re-fetch the primary pages (S1–S3, S5) and update the rows when:
 - any Shopee-specific rule in a reference file is still tagged `⚠ verify` and it
   is about to drive a hard decision, OR
 - a reference file's `last_reviewed` is older than one quarter, OR
-- Phase 02.2 / 02.3 obtains portal or sandbox access (then transcribe S1 and
-  flip rows to `LIVE`).
+- Phase 02.3 (Primary Documentation Ingestion) obtains portal / sandbox access
+  or user-supplied doc exports (then transcribe S1 / S16 and flip rows to
+  `LIVE`).
+
+Phase 02.2 (2026-08-28) added S12–S17 and corrected several Phase 02.1 API
+details but read **nothing** `LIVE` — `open.shopee.com`, `developer.shopee.com`
+and `web.archive.org` are blocked at the fetch-tool level and the portal is a
+client-rendered SPA.
 
 ## How to cite
 

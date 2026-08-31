@@ -1,8 +1,15 @@
 # Moderation & enforcement — post-publication, separate from ProductMaster truth
 
 last_reviewed: 2026-08-28
+phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: OFFICIAL (existence) — verification SEARCH_INDEXED; mechanics & API `⚠ verify` / `UNVERIFIED`
+phase_02_2_note: >-
+  Per-item violation and content-diagnosis method names now exist
+  (`get_item_violation_info`, `get_item_content_diagnosis_result`,
+  `get_item_list_by_content_diagnosis`) — `SEARCH_INDEXED`; BR availability and
+  schema `UNVERIFIED`. `item_status` enum values NOT re-verified. See
+  `research/shopee-api-contract/phase-02.2-report.md` §23–§24.
 
 ## 1. Why this file is separate
 
@@ -44,9 +51,16 @@ An appeals / correction flow exists via Seller Center.
 ## 4. API exposure gaps
 
 - `item_status = BANNED` is visible via `get_item_base_info` / `get_item_list`.
-- A penalty / violations / account-health API for **BR** is `UNVERIFIED` (other
-  Shopee markets expose `public/get_shop_penalty` / account-health — BR
-  availability unconfirmed).
+- **Phase 02.2 correction:** a **per-item violation** method name now exists in
+  community SDKs — `product/get_item_violation_info` (`item_id`) — and a
+  **content-diagnosis** pair — `product/get_item_content_diagnosis_result`
+  (`item_id`) and `product/get_item_list_by_content_diagnosis` (`diagnosis_status`).
+  Phase 01 said "no per-item violation API"; that is corrected to
+  `SEARCH_INDEXED` (schema + BR availability still `UNVERIFIED`).
+- A shop-level penalty / account-health API for **BR** is still `UNVERIFIED`
+  (other Shopee markets expose `public/get_shop_penalty` / account-health — BR
+  availability unconfirmed). The BR `br` service exposes `query_shop_block_status`
+  / `query_sku_block_status` (`SEARCH_INDEXED`, S12).
 - Much enforcement state is likely **Seller-Center-only** — treat it as
   requiring human input.
 

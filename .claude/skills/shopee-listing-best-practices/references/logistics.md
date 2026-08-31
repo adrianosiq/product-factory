@@ -1,8 +1,14 @@
 # Logistics — placeholders to resolve
 
 last_reviewed: 2026-08-28
+phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: OFFICIAL (fields exist) — verification SEARCH_INDEXED; requirements & limits `UNVERIFIED`
+phase_02_2_note: >-
+  Days-to-ship / handling-time limits live in a `logistics` service, not the
+  `product` service — Phase 02.1's `get_dts_limit` under `product` is corrected.
+  `logistics/get_channel_list` and `logistics/get_address` corroborated. See
+  `research/shopee-api-contract/phase-02.2-report.md` §21, §29 (C3).
 
 ## 1. What is (weakly) known
 
@@ -12,7 +18,8 @@ classification: OFFICIAL (fields exist) — verification SEARCH_INDEXED; require
 | Package dimensions | `{ package_length, package_width, package_height }` (cm); may be required per channel / category | `SEARCH_INDEXED` |
 | Channels | `logistics/get_channel_list` → channels enabled for the shop; at least one must be enabled on the listing | `SEARCH_INDEXED` |
 | Addresses | `logistics/get_address` → pickup / return / default `address_id` (a shop setting) | `SEARCH_INDEXED` |
-| Handling time / days-to-ship | `days_to_ship`, with category limits via `get_dts_limit` | `SEARCH_INDEXED` |
+| Handling time / days-to-ship | `days_to_ship`; category limits via a **`logistics`-service** resource — **not** a `product` resource (Phase 02.2 corrects Phase 02.1's `get_dts_limit` filing; exact name `UNVERIFIED`) | `SEARCH_INDEXED` / `UNVERIFIED` |
+| Weight recommendation | `product/get_weight_rec` (a recommendation, not a limit) | `SEARCH_INDEXED` (S12) |
 | Pre-order | `pre_order { is_pre_order, days_to_ship }`; a longer ship window (v1 said 7–30) | `SEARCH_INDEXED`; numbers `⚠ verify` |
 | Condition | `condition ∈ NEW | USED`; USED appears category-gated in BR | `SEARCH_INDEXED`, LOW–MEDIUM |
 | Fulfilment | Shopee BR operates a growing DC network / "Envios Shopee"; DC stock not seller-writable | `SEARCH_INDEXED` (press) |

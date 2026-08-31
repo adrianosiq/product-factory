@@ -1,8 +1,15 @@
 # Categories — discover → resolve → validate
 
 last_reviewed: 2026-08-28
+phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: workflow INTERNAL; underlying endpoints OFFICIAL (verification SEARCH_INDEXED, `⚠ verify`)
+phase_02_2_note: >-
+  `product/get_category` (param `language`) and `product/category_recommend`
+  (param `item_name`) corroborated across two independent SDKs — `SEARCH_INDEXED`,
+  MEDIUM. The **leaf-only requirement is still `UNRESOLVED`** (likely, not
+  proven — do not state as OFFICIAL). No `listing_allowed`-style flag seen. See
+  `research/shopee-api-contract/phase-02.2-report.md` §11.
 
 ## 1. Safe workflow (INTERNAL)
 
