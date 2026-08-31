@@ -5,11 +5,15 @@ phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: OFFICIAL (structure) — verification SEARCH_INDEXED; every API-contract detail `⚠ verify`
 phase_02_2_note: >-
-  Entity spine Shop → Item → Tier Variation → Model corroborated across two
-  independent SDKs (PARTIALLY_CONFIRMED). The persisted listing id is `item_id`;
-  some read endpoints accept it as `item_id_list` (≤ 50) or `product_id`. Models
-  are created by a **separate call** (`init_tier_variation` / `add_model`) after
-  `add_item`. See `research/shopee-api-contract/phase-02.2-report.md` §8–§10.
+  Entity spine Shop → Item → Tier Variation → Model is a corroborated API
+  contract candidate (`SEARCH_INDEXED` · MEDIUM · MULTI_SOURCE; non-primary — not
+  locked). The persisted listing id is `item_id`; `get_item_base_info` takes
+  `item_id_list` (S13 says ≤ 50 — SINGLE_SOURCE, provisional). One integrator
+  page names a read arg `product_id` — its scope is `UNRESOLVED` (local alias vs
+  `v2.global_product.*` / cross-border); do not treat it as a second local
+  identity. Models are created by a separate call (`init_tier_variation` /
+  `add_model`) after `add_item`. See
+  `research/shopee-api-contract/phase-02.2-report.md` §8–§10, §13.
 
 ## 1. The entity model (current best understanding)
 
@@ -28,16 +32,29 @@ Shop  (shop_id)                                   — the seller storefront, reg
             price, stock per model
 ```
 
-An item with **no** variation has no models; its single sellable unit is the
-item itself (`item_id` + `item_sku`).
+For an item with **no** variation, Product Factory maps its internal sellable
+unit to the `item_id` (+ `item_sku`). **Whether Shopee itself keeps a hidden
+default / internal Model for a no-variation item is `UNRESOLVED`** (no endpoint
+or field observed that exposes one) — do not collapse this ambiguity until a
+primary schema settles it. Product Factory keeps its own sellable-unit identity
+either way.
 
-Terminology (Phase 02.2, `SEARCH_INDEXED` MEDIUM): v2 mixes "item" and
-"product". **The id Product Factory persists is `item_id`** — Shopee-assigned by
-`add_item`. Read endpoints take it as `item_id_list` (≤ 50 per call, per S13) or,
-in some integrator docs, as `product_id` (S14). `item = product = the listing
-entity`. "model" is the v2 word; older v1 material says "variation". A separate
-`v2.global_product.*` family exists for cross-border sellers — **out of scope**
-here; BR listings are `v2.product.*`.
+Terminology (Phase 02.2, `SEARCH_INDEXED` · MEDIUM · MULTI_SOURCE): **the id
+Product Factory persists is `item_id`** — Shopee-assigned by `add_item`.
+`get_item_base_info` takes `item_id_list` (S13 says ≤ 50 per call — SINGLE_SOURCE,
+treat as provisional, not a locked constant). One integrator page (S14) names the
+argument `product_id`; **whether `product_id` is a local alias for `item_id` or a
+`v2.global_product.*` / cross-border / SIP concept is `UNRESOLVED`** — it is
+**not** a second local listing identity. "model" is the v2 word; older v1
+material says "variation".
+
+Scope separation:
+- `v2.product.*` — local marketplace listing / product operations (the BR
+  listing scope this Skill targets) — **corroborated API contract candidate**.
+- `v2.global_product.*` — cross-border / global-product domain — **out of the
+  current Product Factory Shopee Brazil listing scope** unless later required.
+  Global-product entities and ids must not leak into the local Item / Model
+  mapping.
 
 ## 2. Entity confidence table
 
@@ -81,10 +98,11 @@ fields (BR — `UNVERIFIED`), `wholesale` tiers, dangerous-goods flag
 
 ## 5. Listing lifecycle
 
-`item_status` — corroborated set: `NORMAL` (live), `UNLIST` (hidden / not for
-sale — seller-toggled), `BANNED` (removed by Shopee for a violation), `DELETED`
-(removed by seller or system). A `REVIEWING` / under-review state appears in some
-responses — `UNVERIFIED`. Draft-via-API — `UNVERIFIED`.
+`item_status` — **provisional set, not re-verified in Phase 02.2** (`STILL_UNVERIFIED`):
+`NORMAL` (live), `UNLIST` (hidden / not for sale — seller-toggled), `BANNED`
+(removed by Shopee for a violation), `DELETED` (removed by seller or system). A
+`REVIEWING` / under-review state appears in some responses — `UNVERIFIED`.
+Draft-via-API — `UNVERIFIED`.
 
 Provisional state model: `NOT_CREATED → (create) → [REVIEWING?] → NORMAL ⇄
 UNLIST`, with `BANNED` / `DELETED` as terminal-ish. Whether edits re-trigger
@@ -106,12 +124,13 @@ Whether Shopee BR has any catalogue / "produto" grouping concept is
 
 ## Sources
 
-- Entity spine + lifecycle order + `item_id`/`product_id` naming (Phase 02.2) —
+- Entity spine + lifecycle order + `item_id` naming (Phase 02.2) —
   `github.com/QuoVadis86/shopee-sdk`, `github.com/congminh1254/shopee-sdk`
   (`docs/managers/product.md`), `rollout.com` — community SDK / external —
-  consulted 2026-08-28 — `SEARCH_INDEXED`, MEDIUM; `phase-02.2-report.md` §8–§10,
-  §29 (C7). `item_status` enum values **not** re-verified this phase — still
-  `STILL_UNVERIFIED`.
+  consulted 2026-08-28 — `SEARCH_INDEXED` · MEDIUM · MULTI_SOURCE (non-primary
+  contract candidate); `phase-02.2-report.md` §8–§10, §13, §29 (C7).
+  `product_id` scope `UNRESOLVED`; `item_id_list ≤ 50` SINGLE_SOURCE / provisional;
+  `item_status` enum values **not** re-verified — `STILL_UNVERIFIED`.
 - v2 endpoint names & `item_status` enum — `github.com/wjp-letgo/shopeego` —
   community SDK — consulted 2026-08-28 — `SEARCH_INDEXED`.
 - v1 field names, `tier_index` combination semantics — `github.com/teacat/shopeego`

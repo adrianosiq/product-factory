@@ -8,12 +8,14 @@ phase_02_2_note: >-
   Method names `init_tier_variation` (`item_id`, `tier_variation`, `model`),
   `add_model` (`item_id`, `model_list` → `model_id`s), `update_model`,
   `delete_model` (`item_id`, `model_id`), `get_model_list` (`item_id`),
-  `get_variations` corroborated across two independent SDKs (`SEARCH_INDEXED`,
-  MEDIUM). Models are created by a **separate call** after `add_item`. Whether a
-  no-variation item still has a hidden default model is `UNRESOLVED`. All caps
-  (tiers / options / models) still `UNVERIFIED`. Shopee also has a **kit /
-  bundle** concept (`get_kit_limit`, `add_kit_item`, …) this file does not model.
-  See `research/shopee-api-contract/phase-02.2-report.md` §10.
+  `get_variations` corroborated across two independent SDKs — `SEARCH_INDEXED` ·
+  MEDIUM · MULTI_SOURCE. The Item→Model structure is a **corroborated API
+  contract candidate** (usable for provisional mapping design, not an
+  implementation contract). Models are created by a **separate call** after
+  `add_item`. Whether a no-variation item still has a hidden default model is
+  `UNRESOLVED`. All caps (tiers / options / models) still `UNVERIFIED`. Shopee
+  also has a **kit / bundle** concept (`get_kit_limit`, `add_kit_item`, …) this
+  file does not model. See `research/shopee-api-contract/phase-02.2-report.md` §10.
 
 ## 1. The combination pattern (maps well to Product Factory)
 
