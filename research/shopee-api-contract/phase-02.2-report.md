@@ -19,25 +19,29 @@ inputs: Phase 02.1 Skill (`.claude/skills/shopee-listing-best-practices/`), Phas
   Open Platform portal is additionally a client-rendered SPA: fetched through a
   Google-Translate proxy (`open-shopee-com.translate.goog`) it still returns only
   the page title, no body. Shopee BR seller/help sites behave the same way.
-- **No official Shopee-maintained SDK or repository exists.** GitHub has only
-  community SDKs (`QuoVadis86/shopee-sdk` Go, `congminh1254/shopee-sdk` TS,
-  `raviMukti/shopee-api-client` PHP, `mu-hanz/shoapi` PHP, …).
+- **No official Shopee-maintained SDK or repository was found or verified during
+  Phase 02.2.** The GitHub search surfaced only community SDKs
+  (`QuoVadis86/shopee-sdk` Go, `congminh1254/shopee-sdk` TS,
+  `raviMukti/shopee-api-client` PHP, `mu-hanz/shoapi` PHP, …). Absence of an
+  official SDK is **not proven** — only that discovery did not find one.
 - **What improved:** triangulation across two independent, well-structured
   community SDKs (one of which maps every method to a specific
   `open.shopee.com/documents/v2/...` locator), plus integrator guides and two
   Shopee **Brasil** seller-education article titles, lets us:
   - raise ~25 v2 `product` endpoint **names + paths + key params** from
-    "scattered SEARCH_INDEXED" to "**corroborated SEARCH_INDEXED, MEDIUM**";
+    "scattered SEARCH_INDEXED" to **`SEARCH_INDEXED` · MEDIUM confidence ·
+    MULTI_SOURCE corroborated** — still non-primary; not `CONFIRMED` in the sense
+    a read primary contract would be;
   - **correct** several Phase 02.1 details (`get_attributes` →
     `get_attribute_tree`; `get_item_limit` is very likely a shop listing-**quota**
     resource, **not** the source of title/description/image size limits;
     `get_dts_limit` is not a `product` resource; a per-item **violation** API and
-    a **content-diagnosis** API do exist as names);
-  - move Brazil Open Platform **existence** from "no evidence" to
-    "well-triangulated" (dedicated `openplatform.shopee.com.br` host, a dedicated
-    `br` API module, two official BR seller-education articles about applying for
-    and integrating with the Open Platform) — while **eligibility terms remain
-    unresolved**.
+    a **content-diagnosis** API appear as method names);
+  - strengthen the Brazil Open Platform **existence signal** from "no evidence"
+    to **MULTI_SOURCE (all non-primary)** — a `openplatform.shopee.com.br` host
+    string, a dedicated `br` API module, and two official BR seller-education
+    article titles about applying for and integrating with the Open Platform —
+    while **eligibility terms remain `UNRESOLVED`**.
 - **What did not improve:** every request/response **schema**, every **numeric
   limit**, the **auth signing base string**, the **stock/warehouse** model, the
   **item-status enum**, and **Brazil eligibility/approval scope** remain
@@ -50,14 +54,15 @@ until a maintainer supplies primary artifacts (§42 list) or MCP/sandbox access.
 
 ## 2. Brazil Open Platform Availability
 
-**State: `UNRESOLVED`** — but the weight of indirect evidence now points to
+**State: `UNRESOLVED`.** The indirect (all non-primary) evidence *leans* toward
 "available to sellers / integrators **through an application + approval
-program**", i.e. the eventual answer is more likely `CONFIRMED_RESTRICTED` than
-`CONFIRMED_UNAVAILABLE`.
+program**" rather than unavailable — but that reading is not confirmed, and the
+state must **not** be recorded as `CONFIRMED_RESTRICTED` until primary
+eligibility / onboarding material is ingested (Phase 02.3).
 
 | Evidence | Tier | What it shows | What it does **not** show |
 |---|---|---|---|
-| `openplatform.shopee.com.br` listed as the **Brazil region host** in `QuoVadis86/shopee-sdk` region config (alongside global `partner.shopeemobile.com`, `openplatform.shopee.cn`) | E | a BR-specific Open Platform endpoint exists | that an arbitrary BR seller can obtain credentials |
+| `openplatform.shopee.com.br` string in `QuoVadis86/shopee-sdk` region config (alongside global `partner.shopeemobile.com`, `openplatform.shopee.cn`) — SINGLE_SOURCE | E | a BR-specific Open Platform host string is present in SDK config | that this host is the canonical Product API base, or that an arbitrary BR seller can obtain credentials |
 | `br.go` module in the same SDK: `br.query_shop_enrollment_status`, `br.query_shop_invoice_error` (nota fiscal), `br.query_shop_block_status`, `br.query_sku_block_status` | E | the API has **Brazil-specific operations** (fiscal, enrollment, block-status) — BR is a first-class region, not an afterthought | the auth/eligibility path to reach them |
 | Shopee BR **Centro de Educação do Vendedor** art. **3445** — "Shopee Open API Platform \| Passo a Passo de Solicitação" (application step-by-step) | B | Shopee BR **documents an Open Platform application process** for sellers | body unreadable (SPA); who is eligible, what is approved |
 | Shopee BR **Centro de Educação do Vendedor** art. **27314** — "Open Platform Shopee: Guia Prático de Integração" (practical integration guide, main flows + support) | B | Shopee BR **officially supports ERP / integrator integration** via the Open Platform | body unreadable; scope of granted API functions |
@@ -137,10 +142,12 @@ names beyond this.
 
 ## 6. API Version
 
-**v2 is the current product API.** Every community SDK and integrator guide from
+**v2 is the consistently observed current-generation product API surface across
+all Phase 02.2 evidence.** Every community SDK and integrator guide from
 2024–2026 targets `/api/v2`; `v1` is referenced only as legacy. `congminh1254`
 names its schema files `v2.product.*` and `v2.global_product.*`. No evidence of a
-v3, and no evidence Brazil differs on version. `SEARCH_INDEXED`, MEDIUM.
+v3; no evidence Brazil differs on version. `SEARCH_INDEXED` · MEDIUM · MULTI_SOURCE
+— **primary contract verification remains pending.**
 
 Note a **local vs global** split (S13): `v2.product.*` (a shop's own catalogue)
 vs `v2.global_product.*` (cross-border / CB seller catalogue that fans out to
@@ -222,9 +229,13 @@ name was corroborated, it is marked `UNVERIFIED`.
 ## 9. Item Contract
 
 - **Listing identity = `item_id`** (Shopee-assigned on `add_item`). Persist it.
-  Read endpoints accept `item_id_list` (≤ 50) or, per some integrators,
-  `product_id`. Treat `item`/`product` as the same entity; the **stored** id is
-  `item_id`. (CONFIRMED as far as SEARCH_INDEXED allows.)
+  Read endpoints (S13) accept `item_id_list` (≤ 50 — a MULTI_SOURCE-absent,
+  single-SDK figure; treat as provisional). One integrator page (S14) calls the
+  `get_item_base_info` argument `product_id` — **whether `product_id` is a local
+  alias for `item_id`, or belongs to `v2.global_product.*` / cross-border / SIP,
+  is `UNRESOLVED`.** Do not treat `product_id` as a second local listing
+  identity. The stored id is `item_id`. (`SEARCH_INDEXED` · MEDIUM · MULTI_SOURCE
+  for `item_id`; `product_id` scope `UNRESOLVED`.)
 - **Create (`add_item`) minimal fields:** `item_name`, `description`,
   `category_id`, `price`, `stock`. The full required set (images, `weight`,
   `dimension`, `logistic_info`, `brand`, `attribute_list`, `condition`,
@@ -536,7 +547,7 @@ Unchanged in principle; refined by §25:
 | `resolve_model_exists` | **KEEP** | `get_model_list(item_id)` corroborated |
 | `resolve_compliance_applicability` | **KEEP** | `get_cert_rule` may be a real per-category certification source (`SEARCH_INDEXED`) |
 | `resolve_contact_diversion_clean` | **KEEP** | INTERNAL payload scan; unchanged |
-| `resolve_open_platform_br_access` | **KEEP** | BR Open Platform existence triangulated; eligibility `UNRESOLVED` |
+| `resolve_open_platform_br_access` | **KEEP** | BR Open Platform existence signal strengthened (MULTI_SOURCE, non-primary); eligibility `UNRESOLVED`; check stays `REVIEW`, never global `FAIL` |
 | *(new)* `resolve_content_diagnosis` | **ADD (optional, QUALITY)** | `get_item_content_diagnosis_result(item_id)` — post-publication quality signal; never a publication gate |
 
 No check points at a **fictional** resource after this audit — but several point
@@ -544,17 +555,24 @@ at resources whose **schema** is unverified, which is now stated explicitly.
 
 ---
 
-## 28. Phase 02.1 Assumptions — CONFIRMED (to SEARCH_INDEXED, MEDIUM)
+## 28. Phase 02.1 Assumptions — corroborated (`SEARCH_INDEXED` · MEDIUM · MULTI_SOURCE; NOT primary-confirmed)
 
-- v2 is the current product API; base `/api/v2`; hosts as listed.
+These are **corroborated API contract candidates** — supported by multiple
+independent non-primary sources, safe for provisional mapping design, **not**
+locked and **not** `CONFIRMED` in the sense a read primary contract would be.
+
+- v2 is the consistently observed current-generation surface; base `/api/v2`;
+  hosts as listed.
 - Auth: `partner_id`+`partner_key`, OAuth per shop → `access_token` (~4 h) +
-  `refresh_token` (~30 d), HMAC-SHA256, timestamp in seconds.
+  `refresh_token` (~30 d), HMAC-SHA256, timestamp in seconds — **exact
+  signing / base-string composition `UNVERIFIED`.**
 - Entity spine **Shop → Item → Tier Variation → Model**; `item_id` / `model_id`
   Shopee-assigned; models created via `init_tier_variation` / `add_model`
-  (separate from `add_item`).
+  (separate call from `add_item`).
 - `update_price` / `update_stock` are batch-shaped and model-aware.
 - Media upload is a separate service returning ids; persist ids not URLs.
-- No dedicated pre-publication validator.
+- No dedicated pre-publication validator **found** (`NO_DEDICATED_VALIDATOR_FOUND`
+  — absence not proven).
 - `CREATE_ITEM` does not consume the `item_id` it produces.
 - Mercado Livre concepts (`User Product`, `Family`, `PARENT_PK`/`CHILD_PK`,
   `Multi Origem`, `listing_allowed`, `EMPTY_GTIN_REASON`) still have **no** Shopee
@@ -569,7 +587,7 @@ at resources whose **schema** is unverified, which is now stated explicitly.
 | C3 | `get_dts_limit` is a `product` resource | not in `v2.product.*` — expected under a **`logistics`** service; `UNVERIFIED` |
 | C4 | "no per-item violation API"; "no `/performance`-style API for BR" | `get_item_violation_info(item_id)` exists; **content-diagnosis** API exists (`get_item_content_diagnosis_result`, `get_item_list_by_content_diagnosis`) — both `SEARCH_INDEXED`, BR availability `UNVERIFIED` |
 | C5 | brand registration "not confirmed" | `product/register_brand` endpoint name exists (`SEARCH_INDEXED`) |
-| C6 | Brazil Open Platform access — "no evidence either way" | **existence well-triangulated** (`openplatform.shopee.com.br` host; `br` API module; BR seller-edu arts. 3445 + 27314); **eligibility still `UNRESOLVED`**, leaning approval-gated (`CONFIRMED_RESTRICTED` in spirit) |
+| C6 | Brazil Open Platform access — "no evidence either way" | **existence signal strengthened**, MULTI_SOURCE but all non-primary (`openplatform.shopee.com.br` host string; `br` API module; BR seller-edu arts. 3445 + 27314); **eligibility `UNRESOLVED`** — evidence *leans* approval-gated but is **not** recorded as `CONFIRMED_RESTRICTED` |
 | C7 | `item`/`product` naming loosely equivalent | sharpen: **persisted id = `item_id`**; read endpoints accept `item_id_list` (≤ 50) or `product_id` |
 
 ## 30. Remaining Unverified (top items)
@@ -601,14 +619,14 @@ at resources whose **schema** is unverified, which is now stated explicitly.
 | `references/api-and-auth.md` | CORRECTED (major) | endpoint registry rebuilt from the corroborated v2 `product` method set + doc locators; `get_attributes`→`get_attribute_tree`; `get_item_limit` scope caveat; `get_dts_limit` moved to logistics/unverified; added `register_brand`, `get_recommend_attribute`, `get_item_violation_info`, content-diagnosis, `get_cert_rule`, size-chart, kit; BR host `openplatform.shopee.com.br`; `br` module; dynamic-check registry sources updated; BR-access section updated (still `UNRESOLVED`) |
 | `references/attributes.md` | CORRECTED | resource is `get_attribute_tree`; `get_recommend_attribute` for recommended set; field names `⚠ verify` |
 | `references/brand-and-identifiers.md` | CORRECTED | `register_brand` endpoint name now `SEARCH_INDEXED`; brand requiredness is category-linked → CONDITIONAL, not universal |
-| `references/product-structure.md` | CORRECTED | persisted id = `item_id`; read endpoints take `item_id_list` (≤50)/`product_id`; doc-locator note |
-| `references/variations.md` | CONFIRMED (notes) | `init_tier_variation`/`add_model`/`update_model`/`delete_model`/`get_model_list` corroborated MEDIUM; `delete_model` takes `model_id`; models are a separate call; kit/bundle concept noted as unmodelled |
+| `references/product-structure.md` | CORRECTED | persisted id = `item_id`; `product_id` scope marked `UNRESOLVED` (possible cross-border concept — not a second local identity); `item_id_list ≤ 50` provisional; doc-locator note |
+| `references/variations.md` | CORROBORATED (notes) | `init_tier_variation`/`add_model`/`update_model`/`delete_model`/`get_model_list` corroborated MEDIUM; `delete_model` takes `model_id`; models are a separate call; kit/bundle concept noted as unmodelled |
 | `references/moderation-and-enforcement.md` | CORRECTED | `get_item_violation_info(item_id)` name now known (`SEARCH_INDEXED`); `get_item_list_by_content_diagnosis` |
 | `references/quality-audit.md` | CORRECTED | content-diagnosis API is the candidate `/performance` analogue (`SEARCH_INDEXED`, BR `UNVERIFIED`); still not a pre-publication gate; add optional `resolve_content_diagnosis` |
-| `references/pricing.md` | CONFIRMED (notes) | `update_price(item_id, price_list)` batch/model-aware corroborated |
-| `references/inventory.md` | CONFIRMED (notes) | `update_stock(item_id, stock_list)` corroborated; warehouse topology still `UNRESOLVED` |
+| `references/pricing.md` | CORROBORATED (notes) | `update_price(item_id, price_list)` batch/model-aware corroborated |
+| `references/inventory.md` | CORROBORATED (notes) | `update_stock(item_id, stock_list)` corroborated; warehouse topology still `UNRESOLVED` |
 | `references/logistics.md` | CORRECTED | DTS/limits live in a `logistics` service, not `product`; `get_weight_rec` noted |
-| `references/categories.md` | CONFIRMED (notes) | `get_category(language)` / `category_recommend(item_name)` corroborated; leaf-only still `⚠ verify` |
+| `references/categories.md` | CORROBORATED (notes) | `get_category(language)` / `category_recommend(item_name)` corroborated; leaf-only still `⚠ verify` |
 | `SKILL.md` | CORRECTED | §13 gaps G1–G3 refined; §8/§10 pointers; link to this report; `last_reviewed` bump |
 
 No file was touched that this research did not produce evidence about.

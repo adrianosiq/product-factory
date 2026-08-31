@@ -10,11 +10,12 @@ scope_note: >-
   `open.shopee.com` — that portal and `web.archive.org` are blocked at the
   fetch-tool level and the portal is a client-rendered SPA (no body even via a
   translation proxy). Phase 02.2 raised the v2 `product` endpoint *names + paths
-  + key params* to "corroborated `SEARCH_INDEXED`, MEDIUM" (two independent
-  community SDKs, one mapping every method to an `open.shopee.com/documents/v2/`
-  locator) and corrected several Phase 02.1 details — see
-  `research/shopee-api-contract/phase-02.2-report.md`. Brazil Open Platform
-  *existence* is now well-triangulated; Brazil *eligibility* is still
+  + key params* to `SEARCH_INDEXED` · MEDIUM confidence · MULTI_SOURCE
+  corroborated (two independent community SDKs, one mapping every method to an
+  `open.shopee.com/documents/v2/` locator) — still non-primary, not `CONFIRMED` —
+  and corrected several Phase 02.1 details — see
+  `research/shopee-api-contract/phase-02.2-report.md`. The Brazil Open Platform
+  *existence* signal is MULTI_SOURCE but all non-primary; Brazil *eligibility* is
   `UNRESOLVED` (§4). Do not build a client, an auth flow, or a publish pipeline
   from this file.
 
@@ -47,16 +48,19 @@ Consequences:
 | Refresh token | `refresh_token`, lifetime ≈ 30 d, rotates on use | `SEARCH_INDEXED`; timing `⚠ verify` |
 | Token scoping | per `shop_id`; stored per shop; one app authorises many shops | `SEARCH_INDEXED`, MEDIUM (S12–S15) |
 | Version prefix | `/api/v2` | `SEARCH_INDEXED`, MEDIUM (S13 schema names + S14 + S15) |
-| Hosts | global `partner.shopeemobile.com`; sandbox `partner.test-stable.shopeemobile.com`; CN `openplatform.shopee.cn`; **Brazil `openplatform.shopee.com.br`** | `SEARCH_INDEXED` (BR host: S12 only — **corroborate**) |
+| Hosts | global `partner.shopeemobile.com`; sandbox `partner.test-stable.shopeemobile.com`; CN `openplatform.shopee.cn`. A **`openplatform.shopee.com.br`** string appears in **one** SDK's region config — an existence signal for a BR Open Platform surface, **not** verified as the canonical production base URL for Product API calls. | `SEARCH_INDEXED` · SINGLE_SOURCE (BR host); `⚠ verify` which host serves BR Product API |
 | Token exchange / refresh | `POST /api/v2/auth/token/get` · `POST /api/v2/auth/access_token/get` | `SEARCH_INDEXED`, MEDIUM |
 | Request signing | HMAC-SHA256 over a base string ≈ `partner_id + api_path + timestamp + [access_token] + [shop_id]`; timestamp in **seconds** | `SEARCH_INDEXED`; exact composition & param order `⚠ verify` — **do not implement** |
 | Multi-shop grouping | `merchant_id` for SIP / cross-border flows; `main_account_id` at token exchange in some flows (`UNVERIFIED`) | `SEARCH_INDEXED` |
 | Local vs global catalogue | `v2.product.*` = a shop's own catalogue (BR listings); `v2.global_product.*` = cross-border seller catalogue — **out of scope** unless a CB model is confirmed | `SEARCH_INDEXED` (S13) |
 | Rate limits | exist; values unknown; back off on a rate-limit error | `UNVERIFIED` |
 
-## 3. Endpoint registry — v2 `product` service (paths corroborated `SEARCH_INDEXED`, MEDIUM; **all schemas `UNVERIFIED`**)
+## 3. Endpoint registry — v2 `product` service
 
-Paths are `/api/v2/product/<method>` unless noted. "Doc locator" =
+Paths / method names: `SEARCH_INDEXED` · MEDIUM confidence · MULTI_SOURCE (all
+non-primary) — a **corroborated API contract candidate**, safe for provisional
+mapping design, **not** locked and **not** primary-`CONFIRMED`. **All schemas
+`UNVERIFIED`.** Paths are `/api/v2/product/<method>` unless noted. "Doc locator" =
 `open.shopee.com/documents/v2/v2.product.<method>?module=89&type=1` (product
 module = `89`) — the page to verify; **not read**. Evidence keys: S12
 `QuoVadis86/shopee-sdk` (Go), S13 `congminh1254/shopee-sdk` (TS, method→locator
@@ -80,7 +84,7 @@ map + JSON schemas), S14 `rollout.com`, S15 `publicapis.io`/`api2cart.com`.
 | `search_attr_value` | search attribute values | — | S12 |
 | `get_brand_list` | brands for a category (`brand_id`, names; "Sem marca" first) | `category_id`, `offset`, `page_size`, `status` | S2, S12, S13 |
 | `register_brand` | submit a seller/manufacturer brand — **Phase 01 said "not confirmed"; a name now exists** | — | S12 |
-| `get_item_limit` | **scope disputed** — S13: no params, returns the shop's item *listing quota*; S12: `item_name`, `category_id`. **Not confirmed to be the source of title/description/image size limits.** | (disputed) | S12, S13 |
+| `get_item_limit` | **appears to represent a shop / item listing quota or listing capacity** (S13: no params, "the item listing limit for your shop"; S12 shows `item_name`, `category_id`). Exact primary semantics **pending**. **Must NOT be used as the resolution source for title / description / image / variation / price limits** — see §5. | (pending) | S12, S13 |
 | `get_weight_rec` | weight recommendation | — | S12 |
 | `get_size_chart_list` / `get_size_chart_detail` | size-chart support (fashion) | — | S12 |
 | `get_cert_rule` | per-category certification rules (regulatory) — verify for `compliance.md` | `category_id`? | S12 |
@@ -92,7 +96,7 @@ map + JSON schemas), S14 `rollout.com`, S15 `publicapis.io`/`api2cart.com`.
 | `update_item` | edit listing fields | `item_id` + changed fields | S12, S13, S14 |
 | `delete_item` | delete a listing | `item_id` | S13 |
 | `unlist_item` | list / unlist toggle | `item_id`, `unlist` (bool) | S12, S13 |
-| `get_item_base_info` | core listing fields | `item_id_list` (≤ 50) — also seen as `product_id` (S14) | S13, S14 |
+| `get_item_base_info` | core listing fields | `item_id_list` (S13 says ≤ 50 — SINGLE_SOURCE, treat as provisional). S14 calls the arg `product_id` — **`product_id` scope `UNRESOLVED`** (local alias vs `v2.global_product.*` / cross-border) | S13, S14 |
 | `get_item_extra_info` | sales / views / likes | `item_id_list` | S12, S13 |
 | `get_item_list` | listing ids by `item_status` | `offset`, `page_size`, `item_status` | S13 |
 | `search_item` | search shop listings | `offset`, `page_size` | S12, S13 |
@@ -113,8 +117,10 @@ map + JSON schemas), S14 `rollout.com`, S15 `publicapis.io`/`api2cart.com`.
 | `get_model_list` | list an item's models + tier structure | `item_id` | S12, S13 |
 | `get_variations` | read variations | `item_id` | S12 |
 
-Lifecycle: `add_item` first → then `init_tier_variation` **or** `add_model` to
-create models (generally a **separate call** from item creation).
+Lifecycle (corroborated API contract candidate — non-primary): `add_item` first →
+then `init_tier_variation` **or** `add_model` to create models (a **separate
+call** from item creation). Usable for provisional mapping design; not an
+implementation contract until primary docs are read.
 
 ### Price / stock
 | Method | Purpose | Key params | Evidence |
@@ -148,26 +154,29 @@ create models (generally a **separate call** from item creation).
 | `public/get_shop_penalty` / account-health | `UNVERIFIED` for BR (other markets) |
 | pre-publication validate / dry-run | **NO_DEDICATED_VALIDATOR_FOUND** — searched a 380-endpoint SDK + a "100% coverage" SDK; no `validate` / `dry-run` / `precheck` in `v2.product.*`. Not a primary-confirmed negative. The `add_item` / `update_item` response is the gate (shape `UNVERIFIED`). `get_item_content_diagnosis_result` is **post**-creation, not a pre-publish check. |
 
-## 4. Brazil access (gap G2) — existence triangulated, eligibility `UNRESOLVED`
+## 4. Brazil access (gap G2) — existence signal strengthened, eligibility `UNRESOLVED`
 
-Phase 02.2 evidence that a Brazil Open Platform **exists** (all `SEARCH_INDEXED`):
+Phase 02.2 evidence that a Brazil Open Platform surface **exists** — MULTI_SOURCE,
+**all non-primary** (`SEARCH_INDEXED`):
 
-- a dedicated Brazil region host `openplatform.shopee.com.br` (S12);
+- a `openplatform.shopee.com.br` host string in one SDK's region config (S12) —
+  an existence signal, **not** a verified canonical Product API base URL;
 - a dedicated `br` API service (`query_shop_enrollment_status`,
   `query_shop_invoice_error`, `query_shop_block_status`,
-  `query_sku_block_status` — S12) — BR is a first-class region;
-- Shopee **Brasil** Centro de Educação do Vendedor articles **3445** ("Shopee
-  Open API Platform | Passo a Passo de Solicitação" — application step-by-step)
-  and **27314** ("Open Platform Shopee: Guia Prático de Integração") — titles /
-  snippets only; bodies are SPA (S16);
+  `query_sku_block_status` — S12);
+- Shopee **Brasil** Centro de Educação do Vendedor article **titles** **3445**
+  ("Shopee Open API Platform | Passo a Passo de Solicitação") and **27314**
+  ("Open Platform Shopee: Guia Prático de Integração") — titles / snippets only;
+  bodies are SPA (S16);
 - BR integrator framing: "Open Platform … Aplicação e autorização conforme o
   programa oficial" (S17).
 
 **Still `UNRESOLVED`:** who may register a partner app for BR; which API
 function-groups a BR partner is granted; sandbox availability for BR; the
-production-approval bar; account-type restrictions. The eventual answer is more
-likely `CONFIRMED_RESTRICTED` (approval-gated) than `CONFIRMED_UNAVAILABLE` — but
-that is not yet confirmed.
+production-approval bar; account-type restrictions. The non-primary evidence
+*leans* toward "available via an application / approval program" rather than
+unavailable — **but the state is not recorded as `CONFIRMED_RESTRICTED`** until
+primary eligibility / onboarding material is ingested (Phase 02.3).
 
 Until resolved (Phase 02.3):
 

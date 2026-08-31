@@ -187,7 +187,7 @@ Shop  (shop_id, Shopee-assigned, region BR)          — the seller storefront
 | Entity | Meaning | Shopee id | Product Factory mapping | Verification |
 |---|---|---|---|---|
 | Shop | seller storefront on Shopee BR | `shop_id` | account/shop mapping | `SEARCH_INDEXED` |
-| Item | the listing | `item_id` (called `product_id` in some v2 docs) | 1 ProductMaster → 1 Item per shop | `SEARCH_INDEXED`; API contract `⚠ verify` |
+| Item | the listing | `item_id` (one integrator page calls a read arg `product_id` — scope `UNRESOLVED`, possibly a cross-border concept, **not** a second local identity) | 1 ProductMaster → 1 Item per shop | `SEARCH_INDEXED`; API contract `⚠ verify` |
 | Tier Variation | the item's variation axes | none (positional) | internal variation axes | `SEARCH_INDEXED`; caps `⚠ verify` |
 | Model | one sellable combination of tier options | `model_id` + `tier_index[]` | internal `variant_id` / SKU ↔ `model_id` | `SEARCH_INDEXED`; API contract `⚠ verify` |
 | Brand | brand attribute value | `brand_id` | — | `SEARCH_INDEXED` |
@@ -478,8 +478,8 @@ corrected several details. Full analysis + change-classification:
 
 | # | Gap | Consequence | Resolve in |
 |---|---|---|---|
-| **G1** | No readable primary Shopee Open Platform API contract. Portal + archive are tool-blocked and the docs are a SPA. Endpoint *names/paths* are now corroborated (`SEARCH_INDEXED`, MEDIUM); every **schema** and **error contract** is still `UNVERIFIED`. | `PUBLICATION_STATUS` hard checks cannot be trusted yet. | Phase 02.3 (Primary Documentation Ingestion) |
-| **G2** | Brazil Open Platform **existence** is now well-triangulated (`openplatform.shopee.com.br` host; a dedicated `br` API service; Shopee BR seller-education arts. 3445 + 27314 about applying for and integrating with it). Brazil **eligibility** — who may register a partner app, which API function-groups are granted, sandbox/production approval — is still **unresolved**, leaning approval-gated. | The `EXECUTION` layer and any publish pipeline still depend on it. Output stays publish-agnostic; `resolve_open_platform_br_access` stays `REVIEW`, never a global `FAIL`. | Phase 02.3 |
+| **G1** | No readable primary Shopee Open Platform API contract. Portal + archive are tool-blocked and the docs are a SPA. Endpoint *names/paths* are a corroborated contract candidate (`SEARCH_INDEXED` · MEDIUM · MULTI_SOURCE, non-primary — not `CONFIRMED`); every **schema** and **error contract** is still `UNVERIFIED`. | `PUBLICATION_STATUS` hard checks cannot be trusted yet. | Phase 02.3 (Primary Documentation Ingestion) |
+| **G2** | Brazil Open Platform **existence** now has a MULTI_SOURCE signal, **all non-primary**: a `openplatform.shopee.com.br` host string in one SDK's region config, a dedicated `br` API module, and two Shopee BR seller-education article titles (3445, 27314) about applying for / integrating with the Open Platform. Brazil **eligibility** — who may register a partner app, which API function-groups are granted, sandbox/production approval — is **`UNRESOLVED`**; the evidence *leans* approval-gated but is **not** recorded as `CONFIRMED_RESTRICTED`. | The `EXECUTION` layer and any publish pipeline still depend on it. Output stays publish-agnostic; `resolve_open_platform_br_access` stays `REVIEW`, never a global `FAIL`. | Phase 02.3 |
 | **G3** | Core numeric limits (title ≈255/256, description ≈5,000, images 1–9 / dims, tier/option/model caps, price/stock bounds, days-to-ship) are only MEDIUM/LOW confidence — **and their resolution *source* is now in doubt**: `get_item_limit` may be a shop listing-**quota** call, not a per-field size-limit resource; `get_dts_limit` is a `logistics` (not `product`) resource. | None is locked. All stay `DYNAMIC` + provisional; the checks keep their names but cite "resolution source `UNVERIFIED`" (`api-and-auth.md` §5). The "≈" numbers live only in prose. | Phase 02.4 |
 | **G4** | BR stock / warehouse model unresolved — single seller pool vs multi-warehouse `location_id`; absolute vs incremental stock writes; concurrency. `update_stock(item_id, stock_list)` shape corroborated; no location dimension observed (absence ≠ proof). | `inventory.md` stays conservative; Multi Origem is **not** imported. | Phase 02.5 |
 | **G5** | No dedicated pre-publication validator found (searched a 380-endpoint SDK + a "100% coverage" SDK — no `validate` / `dry-run` / `precheck` in `v2.product.*`; still not a primary-confirmed negative). A **post-creation** content-diagnosis API does exist (`get_item_content_diagnosis_result`) → feeds `QUALITY_STATUS` only. | `PUBLICATION_STATUS` leans on up-front fetches + local payload checks; the `add_item` response is the authoritative gate (its shape `UNVERIFIED`). | Phase 02.3 / 02.5 |
@@ -500,11 +500,12 @@ corrected several details. Full analysis + change-classification:
   procedure and the audit contract shape are adapted here as Shopee-worded rules.
 - Phase 02.2 API-contract verification —
   `research/shopee-api-contract/phase-02.2-report.md` — internal — 2026-08-30 —
-  triangulated the v2 `product` endpoint set from community SDKs + integrator
-  guides; corrected `get_attributes` → `get_attribute_tree`, the `get_item_limit`
-  scope, `get_dts_limit` filing, and the "no per-item violation / `/performance`
-  API" claim; raised Brazil Open Platform *existence* to well-triangulated
-  (eligibility still unresolved). **Nothing read `LIVE`.**
+  corroborated the v2 `product` endpoint set (`SEARCH_INDEXED` · MEDIUM ·
+  MULTI_SOURCE) from community SDKs + integrator guides; corrected `get_attributes`
+  → `get_attribute_tree`, the `get_item_limit` scope, `get_dts_limit` filing, and
+  the "no per-item violation / `/performance` API" claim; strengthened the Brazil
+  Open Platform *existence* signal (multi-source, non-primary; eligibility still
+  `UNRESOLVED`). **Nothing read `LIVE`.**
 - No Shopee source has been read `LIVE`. Per-topic source rows (all
   `SEARCH_INDEXED` or `UNVERIFIED`) are in each reference file's `## Sources`
   block and consolidated in `references/official-sources.md`.

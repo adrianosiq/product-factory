@@ -70,9 +70,9 @@ integration").
 | id | authority | scope | verification | verified_at | supports | staleness |
 |---|---|---|---|---|---|---|
 | `open.shopee.com/documents/v2/*` (doc locators) | A | `GLOBAL_API` | `UNVERIFIED` (tool-blocked + SPA) | — | the pages that must replace every reconstructed row | re-verify at integration — mandatory |
-| v2 `product` method set (S12+S13) | E | `GLOBAL_API` / `UNRESOLVED_FOR_BRAZIL` | `SEARCH_INDEXED`, MEDIUM | 2026-08-28 | endpoint names, paths, key params, lifecycle order | re-verify before integration |
-| auth model (S12+S14+S15) | D/E | `GLOBAL_API` | `SEARCH_INDEXED`, MEDIUM | 2026-08-28 | OAuth flow, token lifetimes, HMAC-SHA256, `/api/v2` | re-verify signing before any client |
-| Brazil host `openplatform.shopee.com.br` (S12) | E | `BRAZIL` | `SEARCH_INDEXED`, LOW (one source) | 2026-08-28 | a BR region endpoint exists | corroborate |
+| v2 `product` method set (S12+S13) | E | `GLOBAL_API` / `UNRESOLVED_FOR_BRAZIL` | `SEARCH_INDEXED` · MEDIUM · MULTI_SOURCE (non-primary — not `CONFIRMED`) | 2026-08-28 | endpoint names, paths, key params, lifecycle order — a corroborated contract candidate | re-verify before integration |
+| auth model (S12+S14+S15) | D/E | `GLOBAL_API` | `SEARCH_INDEXED` · MEDIUM · MULTI_SOURCE | 2026-08-28 | OAuth flow, token lifetimes, `/api/v2`, HMAC-SHA256 — **exact signing/base string `UNVERIFIED`** | re-verify signing before any client |
+| `openplatform.shopee.com.br` host string (S12 region config) | E | `BRAZIL` | `SEARCH_INDEXED` · LOW · SINGLE_SOURCE | 2026-08-28 | an existence signal for a BR Open Platform surface — **not** verified as the canonical Product API base URL | corroborate; confirm which host serves BR Product API |
 | BR Open Platform application/integration (S16) | B | `BRAZIL` | `SEARCH_INDEXED` (title/snippet) | 2026-08-28 | BR sellers have a documented Open Platform application path | fetch article bodies |
 | `get_item_limit` scope | E | `GLOBAL_API` | `SEARCH_INDEXED`, **conflicting** | 2026-08-28 | possibly a shop listing *quota*, not field limits | resolve before locking numeric limits |
 

@@ -28,7 +28,7 @@ Brasil."** What discovery actually supports:
 | Seller-registered brands | a seller can submit their own or the manufacturer's brand; **subject to Shopee approval**; listings auto-revert to "Sem marca" if rejected | OFFICIAL | `SEARCH_INDEXED` |
 | Rejection reasons | logo/name mismatch, spelling errors, wrong category, policy breaches | OFFICIAL | `SEARCH_INDEXED` |
 | Brand-restricted categories | some categories require brand authorisation (IP) | OFFICIAL | `SEARCH_INDEXED`; specifics `UNVERIFIED` |
-| Registration API | a **`product/register_brand`** method name now appears in a community SDK (Phase 02.2) — the *endpoint* exists; its **schema, approval behaviour and whether it is API- or Seller-Center-driven** are `UNVERIFIED` | — | `SEARCH_INDEXED` (name) / `UNVERIFIED` (behaviour) |
+| Registration API | a **`product/register_brand`** method name is now observed in community SDKs (Phase 02.2) — a brand-registration resource *appears* to exist; its **schema, approval behaviour and whether it is API- or Seller-Center-driven** are `UNVERIFIED` | — | `SEARCH_INDEXED` (name) / `UNVERIFIED` (behaviour) |
 
 ## 2. Brand — how the Skill treats it
 
