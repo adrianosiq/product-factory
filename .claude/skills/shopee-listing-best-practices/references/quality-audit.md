@@ -1,6 +1,7 @@
 # Quality audit & readiness (PROVISIONAL — mirrors the Product Factory contract)
 
 last_reviewed: 2026-08-28
+phase_02_2_reviewed: 2026-08-30
 
 Final gate. Produces the structured output in `SKILL.md` §11. No publishing.
 The readiness model is `SHARED_CORE_CANDIDATE`, adopted here as a **second
@@ -137,10 +138,17 @@ none.
 - **POST_PUBLICATION** — additionally: current `item_status`, any moderation /
   penalty-point state (`moderation-and-enforcement.md`) — preserve `reason` +
   `remedy`; classify `affects[]`; never recreate the listing as a workaround.
-  "No moderation found" is **not** proof a payload is compliant. There is **no**
-  confirmed `/performance`-style listing-quality API for Shopee BR —
-  `QUALITY_STATUS` is driven by our own checks + documented Shopee
-  recommendations + (post-publication) penalty exposure.
+  "No moderation found" is **not** proof a payload is compliant.
+- **`/performance` analogue (Phase 02.2):** community SDKs expose a
+  **content-diagnosis** API — `product/get_item_content_diagnosis_result`
+  (`item_id`) and `product/get_item_list_by_content_diagnosis` — the closest
+  Shopee equivalent to Mercado Livre's `/performance`. It is `SEARCH_INDEXED`
+  (schema + BR availability `UNVERIFIED`), it operates **post-creation** (not a
+  pre-publish gate), and it feeds `QUALITY_STATUS` only — never a
+  publication/execution FAIL. Optional check `resolve_content_diagnosis`
+  (`api-and-auth.md` §5). Until it is verified for BR, `QUALITY_STATUS` is driven
+  by our own checks + documented Shopee recommendations + (post-publication)
+  penalty exposure.
 
 ## 9. Dynamic-check staleness
 

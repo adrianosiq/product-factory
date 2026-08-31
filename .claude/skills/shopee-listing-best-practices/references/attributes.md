@@ -1,15 +1,20 @@
 # Attributes — product fact vs Shopee category requirement
 
 last_reviewed: 2026-08-28
+phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: OFFICIAL (model) — verification SEARCH_INDEXED; value/unit semantics `⚠ verify`
+phase_02_2_note: >-
+  Resource name corrected `get_attributes` → `get_attribute_tree`; recommended
+  set has its own resource `get_recommend_attribute`. Field names remain
+  STILL_UNVERIFIED. See `research/shopee-api-contract/phase-02.2-report.md` §12.
 
 ## 1. Keep two things separate
 
 | Concept | Question | Source |
 |---|---|---|
 | **product fact** | Is this attribute value true for the real product, and how do we know? | `ProductMaster` + evidence model (SKILL.md §5) |
-| **Shopee category requirement** | Does the chosen category require this attribute to publish? | `get_attributes` for the leaf (`DYNAMIC`) |
+| **Shopee category requirement** | Does the chosen category require this attribute to publish? | `get_attribute_tree` for the leaf (`DYNAMIC`) |
 
 A value being *required by the category* never licenses inventing it. A value
 being *true* never means the category will accept it in that form.
@@ -18,22 +23,22 @@ being *true* never means the category will accept it in that form.
 
 | Aspect | Finding | Tag | Verification |
 |---|---|---|---|
-| Endpoint | `get_attributes`, per `category_id` | OFFICIAL | `SEARCH_INDEXED` |
-| Fields | `attribute_id`, `original_attribute_name`, `is_mandatory` (bool), `input_type` (`DROP_DOWN` / `MULTIPLE_SELECT` / `TEXT_FILLING` / `COMBO_BOX` / …), `format_type` (`NORMAL` / `QUANTITATIVE`), `attribute_value_list` (`value_id`, `original_value_name`, `value_unit`), `date_format` | OFFICIAL | `SEARCH_INDEXED`; exact enum set `UNVERIFIED` |
-| Requiredness | **static per category**, expressed by `is_mandatory`. No separate conditional-resolution endpoint found (no analogue of ML's `POST .../attributes/conditional`). | OFFICIAL | `SEARCH_INDEXED` |
+| Endpoint | **`get_attribute_tree`**, per `category_id` + `language` (Phase 02.2 **correction** — Phase 01/02.1 said `get_attributes`; the current method name in two independent SDKs is `get_attribute_tree`). A separate **`get_recommend_attribute`** (`category_id`, `item_name`) returns the recommended / quality set. | OFFICIAL | `SEARCH_INDEXED` (name MEDIUM; `get_attributes` may be an older alias) |
+| Fields | believed: `attribute_id`, `original_attribute_name`, `is_mandatory` (bool), `input_type` (`DROP_DOWN` / `MULTIPLE_SELECT` / `TEXT_FILLING` / `COMBO_BOX` / …), `format_type` (`NORMAL` / `QUANTITATIVE`), `attribute_value_list` (`value_id`, `original_value_name`, `value_unit`), `date_format` | OFFICIAL | **`STILL_UNVERIFIED`** — the `get_attribute_tree` schema has not been read; field names are Phase 01 SDK reconstructions |
+| Requiredness | **static per category**, believed expressed by `is_mandatory`. No separate conditional-resolution endpoint found (no analogue of ML's `POST .../attributes/conditional`). | OFFICIAL | `SEARCH_INDEXED` |
 | Free-text vs value-id | both, per `input_type` — `TEXT_FILLING` allows free text; dropdowns need a `value_id` | OFFICIAL | `SEARCH_INDEXED` |
 | Units | `value_unit` on quantitative attributes | OFFICIAL | `SEARCH_INDEXED` |
 | Regulatory fields | appear as **ordinary attributes** in regulated categories (INMETRO number, ANVISA registration, …) — not a separate subsystem | OFFICIAL | `SEARCH_INDEXED` |
 
 ## 3. Classification for the Skill
 
-- **Attribute requiredness is `DYNAMIC`** — always fetch `get_attributes` for the
-  resolved leaf; never hardcode which attributes a category needs.
+- **Attribute requiredness is `DYNAMIC`** — always fetch `get_attribute_tree` for
+  the resolved leaf; never hardcode which attributes a category needs.
 - **Mandatory (`is_mandatory = true`) missing** → `PUBLICATION_STATUS = FAIL`
   after the category is resolved.
 - **Recommended / "quality" attributes** → `QUALITY_STATUS`, never
   `PUBLICATION_STATUS` (same split the ML Skill makes for technical specs).
-- **Check pending** (category or `get_attributes` not yet resolved) →
+- **Check pending** (category or `get_attribute_tree` not yet resolved) →
   `PUBLICATION_STATUS = REVIEW`, `dynamic_checks_required:
   resolve_category_attributes`.
 
@@ -54,18 +59,24 @@ being *true* never means the category will accept it in that form.
 ```
 check: resolve_category_attributes
 why:   determine which attributes are mandatory (is_mandatory) vs recommended
-source: get_attributes for the resolved leaf   ← endpoint NOT hardcoded; see api-and-auth.md §3
+source: get_attribute_tree for the resolved leaf  (recommended set: get_recommend_attribute)
+        ← endpoint NOT hardcoded; see api-and-auth.md §3
 pending:                REVIEW (PUBLICATION)
 executed + all mandatory filled: no blocker
 executed + a mandatory attribute unmet: FAIL (PUBLICATION)
-verification: SEARCH_INDEXED
+verification: SEARCH_INDEXED (method name); field names STILL_UNVERIFIED
 ```
 
 ## Sources
 
-- `get_attributes` fields, `is_mandatory`, `input_type`, quantitative units —
+- Resource name `get_attribute_tree` (+ `get_recommend_attribute`,
+  `search_attr_value`) — `github.com/QuoVadis86/shopee-sdk`,
+  `github.com/congminh1254/shopee-sdk` (`docs/managers/product.md`) — community
+  SDKs — consulted 2026-08-28 — `SEARCH_INDEXED`, MEDIUM (method name);
+  `phase-02.2-report.md` §12, §29 (C1).
+- Field names (`is_mandatory`, `input_type`, quantitative units) —
   `github.com/wjp-letgo/shopeego`, `github.com/teacat/shopeego` — community SDKs
-  — consulted 2026-08-28 — `SEARCH_INDEXED` (enum sets `UNVERIFIED`).
+  — consulted 2026-08-28 — **`STILL_UNVERIFIED`** (schema not read).
 - Regulatory fields as ordinary attributes — `help.shopee.com.br` art. 76226 —
   Central de Ajuda — consulted 2026-08-28 — `SEARCH_INDEXED`.
 - Required-vs-quality split — `.claude/skills/mercado-livre-listing-best-practices/references/quality-audit.md`

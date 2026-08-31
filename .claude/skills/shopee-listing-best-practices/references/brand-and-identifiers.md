@@ -1,8 +1,15 @@
 # Brand & product identifiers (GTIN / EAN / UPC / ISBN)
 
 last_reviewed: 2026-08-28
+phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: OFFICIAL (existence of the requirement) — verification SEARCH_INDEXED; exact scope `⚠ verify`
+phase_02_2_note: >-
+  `get_brand_list` is a **per-`category_id`** resource — brand requiredness is
+  category-linked, which supports modelling brand as CONDITIONAL_REQUIRED /
+  PUBLICATION_REQUIRED, not CORE_REQUIRED. A `product/register_brand` endpoint
+  name now appears in a community SDK (`SEARCH_INDEXED`; Phase 01 said "not
+  confirmed"). See `research/shopee-api-contract/phase-02.2-report.md` §13.
 
 ## 1. Brand — what is known vs provisional
 
@@ -21,7 +28,7 @@ Brasil."** What discovery actually supports:
 | Seller-registered brands | a seller can submit their own or the manufacturer's brand; **subject to Shopee approval**; listings auto-revert to "Sem marca" if rejected | OFFICIAL | `SEARCH_INDEXED` |
 | Rejection reasons | logo/name mismatch, spelling errors, wrong category, policy breaches | OFFICIAL | `SEARCH_INDEXED` |
 | Brand-restricted categories | some categories require brand authorisation (IP) | OFFICIAL | `SEARCH_INDEXED`; specifics `UNVERIFIED` |
-| Registration API | a `brand/register_brand`-style endpoint is **not confirmed**; may be Seller-Center-only | — | `UNVERIFIED` |
+| Registration API | a **`product/register_brand`** method name now appears in a community SDK (Phase 02.2) — the *endpoint* exists; its **schema, approval behaviour and whether it is API- or Seller-Center-driven** are `UNVERIFIED` | — | `SEARCH_INDEXED` (name) / `UNVERIFIED` (behaviour) |
 
 ## 2. Brand — how the Skill treats it
 
@@ -74,8 +81,10 @@ Brasil."** What discovery actually supports:
   approval / auto-revert — `seller.shopee.com.br/edu` (art. 10619), BR
   integrators (`base.com`, `gobots`, `mambadigital`) — Centro de Educação /
   external — consulted 2026-08-28 — `SEARCH_INDEXED`.
-- `get_brand_list` fields — `github.com/wjp-letgo/shopeego` — community SDK —
-  consulted 2026-08-28 — `SEARCH_INDEXED`.
+- `get_brand_list` (per `category_id`, paged, `status` filter) + `register_brand`
+  method name — `github.com/wjp-letgo/shopeego`, `github.com/QuoVadis86/shopee-sdk`,
+  `github.com/congminh1254/shopee-sdk` — community SDKs — consulted 2026-08-28 —
+  `SEARCH_INDEXED`; `phase-02.2-report.md` §13, §29 (C5).
 - EAN "obrigatório para alguns produtos" — `suporte.anymarket.com.br`,
   `atendimento.ideris.com.br` — external — consulted 2026-08-28 —
   `SEARCH_INDEXED`.

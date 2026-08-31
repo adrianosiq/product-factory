@@ -1,8 +1,14 @@
 # Pricing
 
 last_reviewed: 2026-08-28
+phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: OFFICIAL (fields) — verification SEARCH_INDEXED; all bounds `UNVERIFIED`
+phase_02_2_note: >-
+  `product/update_price` (`item_id`, `price_list`) corroborated; `price_list`
+  entries carry `model_id` when models exist. `price_limit` bounds and their
+  resolution source remain `UNVERIFIED` (`get_item_limit` scope is disputed —
+  see `api-and-auth.md` §3). See `phase-02.2-report.md` §18.
 
 ## 1. Conceptual separation (keep these four apart)
 

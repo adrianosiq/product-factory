@@ -8,8 +8,9 @@ description: >-
   expectation and delivered product. Produces a listing draft plus a structured
   quality audit. Never publishes.
 last_reviewed: 2026-08-28
+phase_02_2_reviewed: 2026-08-30
 review_owner: product-create team
-status: PROVISIONAL SCAFFOLD — Phase 02.1
+status: PROVISIONAL SCAFFOLD — Phase 02.1 (API contract partially verified, Phase 02.2)
 scaffold_notice: >-
   This Skill was scaffolded from Phase 01 discovery, which had ZERO live Shopee
   sources. No readable primary Shopee Open Platform API contract has been
@@ -126,7 +127,7 @@ Every recommendation this Skill emits carries **exactly one** tag:
 | Tag | Meaning |
 |---|---|
 | **OFFICIAL** | Stated in Shopee official documentation (Open Platform docs, Centro de Educação do Vendedor, Central de Ajuda). Cite it. Until a source is read `LIVE`, an OFFICIAL rule still carries `⚠ verify`. |
-| **DYNAMIC** | A value/rule that depends on the current category / shop / region and MUST be fetched at listing time (e.g. from `get_category`, `get_attributes`, `get_brand_list`, `get_item_limit`, `get_dts_limit`). **Never hardcoded.** On Shopee, `DYNAMIC` carries more weight than on Mercado Livre — almost every numeric limit is dynamic. |
+| **DYNAMIC** | A value/rule that depends on the current category / shop / region and MUST be fetched at listing time (e.g. from `get_category`, `get_attribute_tree`, `get_brand_list`, and a still-`UNVERIFIED` limit source — `get_item_limit` may be a shop quota, not per-field limits; see `references/api-and-auth.md` §3). **Never hardcoded.** On Shopee, `DYNAMIC` carries more weight than on Mercado Livre — almost every numeric limit is dynamic. |
 | **INTERNAL** | Good practice created for our operation. Not a Shopee requirement. |
 | **EXPERIMENTAL** | An unproven hypothesis (e.g. a ranking interpretation). Must be validated with data before it influences a hard decision. |
 | **LEARNED** | Derived from our own historical performance data (future) — maps naturally to Shopee's penalty-point / shop-performance feedback. |
@@ -207,8 +208,8 @@ Tamanho: P, M, G
 This maps cleanly to internal Product Factory variants at the **model** level.
 But do **not** lock as stable constants: maximum tiers, maximum options per tier,
 maximum model count, per-model SKU limits, images per tier. Those live in
-`references/variations.md` as `DYNAMIC` / `UNVERIFIED` (resolve via
-`get_item_limit`).
+`references/variations.md` as `DYNAMIC` / `UNVERIFIED` (the resolution source —
+`get_item_limit` vs category metadata — is itself unverified; `references/api-and-auth.md` §3).
 
 ### 6.2 Operation-scoped execution (conceptual)
 
@@ -465,13 +466,23 @@ or finding shape must be mirrored across this file and
 These block **locking** rules and building any execution client. They do **not**
 block scaffolding or drafting. They should shrink as later phases resolve them.
 
+**Phase 02.2 update (2026-08-30):** primary Shopee developer surfaces
+(`open.shopee.com`, `developer.shopee.com`, `web.archive.org`) are blocked at the
+fetch-tool level and the portal is a client-rendered SPA — **nothing was read
+`LIVE`.** Triangulation across two independent community SDKs + integrator guides
++ two Shopee BR seller-education article titles raised the v2 `product` endpoint
+*names / paths / key params* to "corroborated `SEARCH_INDEXED`, MEDIUM" and
+corrected several details. Full analysis + change-classification:
+`research/shopee-api-contract/phase-02.2-report.md`. Decision:
+**`API CONTRACT PARTIALLY VERIFIED — USER PRIMARY ARTIFACT REQUIRED`.**
+
 | # | Gap | Consequence | Resolve in |
 |---|---|---|---|
-| **G1** | No readable primary Shopee Open Platform API contract (portal unreachable; not usefully indexed). | Every endpoint / field / payload / limit is `SEARCH_INDEXED` or `UNVERIFIED`. `PUBLICATION_STATUS` hard checks cannot be trusted yet. | Phase 02.2 |
-| **G2** | Whether the Open Platform API is available to Brazil-domiciled partners / shops at all is **unresolved**. | The entire `EXECUTION` layer and any future publish pipeline depend on it. Output stays publish-agnostic. | Phase 02.3 |
-| **G3** | Core numeric limits (title ≈255/256, description ≈5,000, images 1–9, image dims ≈350×350 / ≈1024, tier/option/model caps, price/stock bounds, days-to-ship) are only MEDIUM/LOW confidence. | None is locked. All are `DYNAMIC` via `get_item_limit` / `get_dts_limit` / category lookups; the "≈" numbers live only in prose as provisional. | Phase 02.4 |
-| **G4** | BR stock / warehouse model unresolved — single seller pool vs multi-warehouse `location_id`; absolute vs incremental stock writes; concurrency behaviour. | `inventory.md` stays conservative; Multi Origem is **not** imported. | Phase 02.5 |
-| **G5** | No dedicated pre-publication validator has been confirmed (no `POST /items/validate` analogue found — but the negative is not proven either). | `PUBLICATION_STATUS` must lean on up-front limit/attribute fetches + local payload checks; the `add_item` response is treated as the authoritative gate. | Phase 02.2 / 02.5 |
+| **G1** | No readable primary Shopee Open Platform API contract. Portal + archive are tool-blocked and the docs are a SPA. Endpoint *names/paths* are now corroborated (`SEARCH_INDEXED`, MEDIUM); every **schema** and **error contract** is still `UNVERIFIED`. | `PUBLICATION_STATUS` hard checks cannot be trusted yet. | Phase 02.3 (Primary Documentation Ingestion) |
+| **G2** | Brazil Open Platform **existence** is now well-triangulated (`openplatform.shopee.com.br` host; a dedicated `br` API service; Shopee BR seller-education arts. 3445 + 27314 about applying for and integrating with it). Brazil **eligibility** — who may register a partner app, which API function-groups are granted, sandbox/production approval — is still **unresolved**, leaning approval-gated. | The `EXECUTION` layer and any publish pipeline still depend on it. Output stays publish-agnostic; `resolve_open_platform_br_access` stays `REVIEW`, never a global `FAIL`. | Phase 02.3 |
+| **G3** | Core numeric limits (title ≈255/256, description ≈5,000, images 1–9 / dims, tier/option/model caps, price/stock bounds, days-to-ship) are only MEDIUM/LOW confidence — **and their resolution *source* is now in doubt**: `get_item_limit` may be a shop listing-**quota** call, not a per-field size-limit resource; `get_dts_limit` is a `logistics` (not `product`) resource. | None is locked. All stay `DYNAMIC` + provisional; the checks keep their names but cite "resolution source `UNVERIFIED`" (`api-and-auth.md` §5). The "≈" numbers live only in prose. | Phase 02.4 |
+| **G4** | BR stock / warehouse model unresolved — single seller pool vs multi-warehouse `location_id`; absolute vs incremental stock writes; concurrency. `update_stock(item_id, stock_list)` shape corroborated; no location dimension observed (absence ≠ proof). | `inventory.md` stays conservative; Multi Origem is **not** imported. | Phase 02.5 |
+| **G5** | No dedicated pre-publication validator found (searched a 380-endpoint SDK + a "100% coverage" SDK — no `validate` / `dry-run` / `precheck` in `v2.product.*`; still not a primary-confirmed negative). A **post-creation** content-diagnosis API does exist (`get_item_content_diagnosis_result`) → feeds `QUALITY_STATUS` only. | `PUBLICATION_STATUS` leans on up-front fetches + local payload checks; the `add_item` response is the authoritative gate (its shape `UNVERIFIED`). | Phase 02.3 / 02.5 |
 | **G6** | Catalogue / "produto" grouping concept unresolved — no evidence of a shared product page / Buy Box, but not confirmed absent. | Every listing treated as standalone; no catalogue-association logic built; no `catalog.md` created. | Phase 02.10 |
 | **G7** | Penalty-point mechanics (weekly cadence, 60-day validity, threshold values) and any BR violations / account-health API are unverified. | Enforcement treated as Seller-Center-only and separate from ProductMaster truth. | Phase 02.8 |
 | **G8** | Listing-video constraints (duration / size / aspect) vs Shopee Video / Shopee Live constraints not separated with confidence. | Only state Shopee Video / Live numbers with an explicit `scope`; listing-video specs marked unknown. | Phase 02.7 |
@@ -487,6 +498,13 @@ block scaffolding or drafting. They should shrink as later phases resolve them.
   source. Provenance tags, the four-dimension readiness model, evidence model,
   requirement layers, Product Identity Guard, claim-safety, compliance-as-
   procedure and the audit contract shape are adapted here as Shopee-worded rules.
+- Phase 02.2 API-contract verification —
+  `research/shopee-api-contract/phase-02.2-report.md` — internal — 2026-08-30 —
+  triangulated the v2 `product` endpoint set from community SDKs + integrator
+  guides; corrected `get_attributes` → `get_attribute_tree`, the `get_item_limit`
+  scope, `get_dts_limit` filing, and the "no per-item violation / `/performance`
+  API" claim; raised Brazil Open Platform *existence* to well-triangulated
+  (eligibility still unresolved). **Nothing read `LIVE`.**
 - No Shopee source has been read `LIVE`. Per-topic source rows (all
   `SEARCH_INDEXED` or `UNVERIFIED`) are in each reference file's `## Sources`
   block and consolidated in `references/official-sources.md`.
