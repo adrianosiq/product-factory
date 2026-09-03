@@ -1,7 +1,13 @@
 # research/shopee-primary-docs — Phase 02.3 Primary Documentation Ingestion
 
-**Status (2026-08-30): `PRIMARY DOCUMENTATION REQUIRED` — no primary artifact has
-been supplied or is reachable. Nothing has been ingested.**
+**Status (2026-09-03): 35 primary artifacts received and registered**
+(`SPD-001…SPD-035`, `evidence-registry.md`) — official Shopee Open Platform
+print-to-PDF exports, now organized under
+`docs/marketplaces/shopee/open-platform/` (30 committed; 5 HELD for secret
+review). **Extraction / reconciliation NOT yet done** — `claim-registry.md` and
+`reconciliation-report.md` are unchanged; no claim is `PRIMARY_VERIFIED`. That
+is the next pass. The `2026-08-30` "PRIMARY DOCUMENTATION REQUIRED" checkpoint
+below is superseded.**
 
 ## What this phase is
 
