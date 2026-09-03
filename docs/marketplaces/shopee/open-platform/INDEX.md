@@ -18,19 +18,20 @@ evidence registry (SPD id is the stable identity; the path may change).
 
 ## Status
 
-- **30 of 35 PDFs are committed.** **5 remain HELD** and are git-ignored (see
-  `.gitignore` at repo root and the table below). 2nd-pass review (2026-09-03):
-  a deep non-visual scan (all link URIs, form fields, rendered text, image
-  inventory) of the 5 is **clean** — and the one credential-shaped value
-  detected earlier (an OAuth `code` in `authentication.pdf`) is a
-  **documentation example** (it sits beside `code=xxxxxx` placeholder variants on
-  Shopee's own auth guide). But all 5 are screenshot-heavy credential-context
-  pages, and **no PDF renderer / OCR is available here** to inspect the image
-  content, so none can be cleared. A maintainer with a PDF viewer should eyeball
-  them. **Secret Gate: PARTIAL.**
-- No claim in `claim-registry.md` has been promoted to `PRIMARY_VERIFIED` yet —
+- **All 35 PDFs are committed.** The 5 initially held (`authentication`,
+  `create-your-app`, `authorize-your-first-shop`, `make-your-first-api-call`,
+  `sandbox-testing`) were cleared 2026-09-03 by **maintainer visual review**
+  (`MANUAL_VISUAL_REVIEW_BY_MAINTAINER = PASS`): the credential-shaped values in
+  them are Shopee documentation examples, and there is currently no Product
+  Factory App in the Shopee Open Platform account, so no real credentials are
+  present. SHA-256 verified byte-identical to the pre-reorganization originals;
+  the PDFs were added unmodified; the temporary `.gitignore` was removed.
+  **Secret Gate: PASS.** Full history: `research/shopee-primary-docs/evidence-registry.md`.
+- No claim in `claim-registry.md` has been promoted to `PRIMARY_VERIFIED` —
   extraction / reconciliation is the resumed Phase 02.3 pass, not this
   organization pass.
+- **P0 documentation coverage is INCOMPLETE**: `LOGISTICS PRIMARY DOCUMENTATION
+  MISSING`. Artifact safety (PASS) and P0 coverage (incomplete) are separate.
 
 ## Quick lookup
 
@@ -44,7 +45,7 @@ evidence registry (SPD id is the stable identity; the path may change).
 | `update_price` | `product/pricing/` |
 | `update_stock` | `product/inventory/` |
 | `get_item_limit` (shop listing quota — scope TBD) | `product/limits/` |
-| authentication / signing / tokens | `authorization/` *(HELD — see below)* |
+| authentication / signing / tokens | `authorization/` |
 | developer journey (login → dev account → app → authorize shop → first call → sandbox → Go Live) | `getting-started/` |
 | Brazil app creation (BR SPI) | `brazil/` |
 | webhooks / push notifications | `push/` |
@@ -55,14 +56,14 @@ evidence registry (SPD id is the stable identity; the path may change).
 
 | SPD | Document | Path (under `docs/marketplaces/shopee/open-platform/`) | Surface | Market | Captured | Cap# | API resource / topic |
 |---|---|---|---|---|---|---|---|
-| SPD-001 | Authentication *(HELD)* | `authorization/authentication.pdf` | Developer Guide | GLOBAL | 2026-09-01 | 02 | auth flow, request signing, `access_token` / `refresh_token` |
+| SPD-001 | Authentication | `authorization/authentication.pdf` | Developer Guide | GLOBAL | 2026-09-01 | 02 | auth flow, request signing, `access_token` / `refresh_token` |
 | SPD-002 | Develop an integration | `getting-started/develop-an-integration.pdf` | Developer Guide | GLOBAL (pt-BR) | 2026-09-03 | — | integration overview / developer lifecycle |
 | SPD-003 | Create a login | `getting-started/create-a-login.pdf` | Developer Guide | GLOBAL (pt-BR) | 2026-09-03 | — | Shopee account login |
 | SPD-004 | Create developer account | `getting-started/create-developer-account.pdf` | Developer Guide | GLOBAL (pt-BR) | 2026-09-03 | — | developer-account registration |
-| SPD-005 | Create your App *(HELD)* | `getting-started/create-your-app.pdf` | Developer Guide | GLOBAL (pt-BR) | 2026-09-03 | — | App creation, `partner_id` / `partner_key` |
-| SPD-006 | Authorize your first shop *(HELD)* | `getting-started/authorize-your-first-shop.pdf` | Developer Guide | GLOBAL (pt-BR) | 2026-09-03 | — | shop OAuth authorization |
-| SPD-007 | Make your first API call *(HELD)* | `getting-started/make-your-first-api-call.pdf` | Developer Guide | GLOBAL (pt-BR) | 2026-09-03 | — | first signed request walkthrough |
-| SPD-008 | Sandbox testing *(HELD)* | `getting-started/sandbox-testing.pdf` | Developer Guide | GLOBAL (pt-BR) | 2026-09-03 | — | sandbox / test environment |
+| SPD-005 | Create your App | `getting-started/create-your-app.pdf` | Developer Guide | GLOBAL (pt-BR) | 2026-09-03 | — | App creation, `partner_id` / `partner_key` |
+| SPD-006 | Authorize your first shop | `getting-started/authorize-your-first-shop.pdf` | Developer Guide | GLOBAL (pt-BR) | 2026-09-03 | — | shop OAuth authorization |
+| SPD-007 | Make your first API call | `getting-started/make-your-first-api-call.pdf` | Developer Guide | GLOBAL (pt-BR) | 2026-09-03 | — | first signed request walkthrough |
+| SPD-008 | Sandbox testing | `getting-started/sandbox-testing.pdf` | Developer Guide | GLOBAL (pt-BR) | 2026-09-03 | — | sandbox / test environment |
 | SPD-009 | Publish your App (Go Live) | `getting-started/publish-your-app-go-live.pdf` | Developer Guide | GLOBAL (pt-BR) | 2026-09-03 | — | app review / production go-live |
 | SPD-010 | add_item | `product/item/add-item.pdf` | API Reference | GLOBAL | 2026-09-01 | 04 | `v2.product.add_item` |
 | SPD-011 | get_item_base_info | `product/item/get-item-base-info.pdf` | API Reference | GLOBAL | 2026-09-01 | 05 | `v2.product.get_item_base_info` |

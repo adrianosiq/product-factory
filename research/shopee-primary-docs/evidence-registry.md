@@ -1,50 +1,71 @@
 # Primary Evidence Registry — Phase 02.3
 
-last_updated: 2026-09-03 (2nd pass — HELD-artifact review)
-status: **35 artifacts registered (SPD-001 … SPD-035); 30 `COMMITTED_OR_READY`,
-5 `HELD`.** All are official Shopee Open Platform browser print-to-PDF exports
-(provenance demonstrable from each PDF's `/Title` = "Documentation / Developer
-Guide - Shopee Open Platform" and embedded `open.shopee.com/*` URLs). Raw PDFs
-live under `docs/marketplaces/shopee/open-platform/` (see that folder's
-`INDEX.md`). **Secret Gate: `PARTIAL`** — see the 2nd-pass table below.
+last_updated: 2026-09-03 (3rd pass — maintainer cleared the 5 HELD artifacts)
+status: **35 artifacts registered (SPD-001 … SPD-035); all 35
+`COMMITTED_OR_READY`; 0 `HELD`; 0 `SANITIZED`.** All are official Shopee Open
+Platform browser print-to-PDF exports (provenance demonstrable from each PDF's
+`/Title` = "Documentation / Developer Guide - Shopee Open Platform" and embedded
+`open.shopee.com/*` URLs). Raw PDFs live under
+`docs/marketplaces/shopee/open-platform/` (see that folder's `INDEX.md`).
+**Secret Gate: `PASS`** — see the review history below.
+
+**Primary evidence intake is COMPLETE. This is not P0 documentation-coverage
+completion** — `LOGISTICS PRIMARY DOCUMENTATION MISSING` (no `logistics`-service
+page was supplied). Artifact safety and P0 coverage are separate dimensions.
 
 **This registration is intake metadata only** — no claim in `claim-registry.md`
 has been promoted (that is the resumed Phase 02.3 extraction/reconciliation
 pass). "Supports" lists the claims each artifact is *expected to bear on*, not
 claims it has been read to confirm.
 
-### Secret-review status — 2026-09-03 (2nd pass)
+### Secret-review history
 
-**Review method available:** stdlib deep non-visual inspection (zlib-inflate of
-all content streams; enumerate every `/URI` link annotation; AcroForm `/T`/`/V`
-fields; annotation `/Contents`; `Tj`/`TJ` rendered text; image XObject inventory
-+ dimensions). **Not available:** any PDF rasterizer / renderer / OCR
-(`poppler`, `ghostscript`, `imagemagick`, `pdf.js`, `pip` all absent; installing
-software was out of scope). So **text baked into screenshot images could not be
-inspected** on any of the 5.
+**Pass 1 (2026-09-03, automated):** stdlib text-stream + `/URI` scan of all 35.
+30 clean → committed. 5 flagged for review: `authentication.pdf` (an OAuth
+`code`+`shop_id` in an example redirect URL) + the 4 §8 credential-context
+onboarding pages (image-only, screenshot content unreadable without a renderer).
 
-| SPD | File | Detected-value classification | Screenshot content | Artifact state |
-|---|---|---|---|---|
-| SPD-001 | `authorization/authentication.pdf` | `DOCUMENTATION_EXAMPLE` — the OAuth `code`+`shop_id` sits in one of **three** example redirect URLs on this Shopee-authored auth guide; the other two use explicit `code=xxxxxx` / `shop_id=xxxxxx` / `main_account_id=xxxxxx` placeholders. The page's auth examples use Shopee's canonical documentation `partner_id=10090` (and sandbox `1000016`). No `partner_key` / `partner_secret` / `access_token` value / `refresh_token` value anywhere — only public token-exchange **endpoint URLs**. The one realistic-shaped value is a 32-hex string whose type (single-use OAuth code, ~10-min TTL) has been inert since capture. | **117 large screenshots (103 ≥ 1600 px) — not inspectable here.** | **HELD** |
-| SPD-005 | `getting-started/create-your-app.pdf` | machine-readable channels **clean** — 23 URIs are all generic Shopee nav/footer chrome (incl. `open.shopee.com/console/app`); 0 credential params; 0 form fields; 0 rendered text. | 11 large screenshots (9 ≥ 1600 px) — **not inspectable**; this is the App-creation console page where a Partner Key would appear if the maintainer captured their own new app. | **HELD** |
-| SPD-006 | `getting-started/authorize-your-first-shop.pdf` | machine-readable channels **clean** — 23 generic URIs, 0 credential params, 0 form fields. (`Tj` text extracts as image/font binary, not real text.) | 14 large screenshots (9–12 ≥ 1600 px) — **not inspectable**; shop-authorization flow may show a real redirect `code`. | **HELD** |
-| SPD-007 | `getting-started/make-your-first-api-call.pdf` | machine-readable channels **clean** — 24 generic URIs (one malformed relative link `v2.0%20data%20definition/` from body text, not a credential), 0 credential params, 0 form fields, 0 rendered text. | 11 large screenshots (9 ≥ 1600 px) — **not inspectable**; a worked first request could show a real `access_token` / `sign` / `partner_id`. | **HELD** |
-| SPD-008 | `getting-started/sandbox-testing.pdf` | machine-readable channels **clean** — 23 generic URIs, 0 credential params, 0 form fields, 0 rendered text. | 13 large screenshots (11 ≥ 1600 px) — **not inspectable**; sandbox credential context. | **HELD** |
+**Pass 2 (2026-09-03, automated deep non-visual):** zlib-inflated every content
+stream; enumerated all `/URI` link annotations, AcroForm fields, annotation
+`/Contents`, `Tj`/`TJ` text, image inventory. Result: **all machine-readable
+channels of the 5 are clean** (generic Shopee nav URIs only; 0 credential
+params; 0 form-field values; 0 real rendered text). The `authentication.pdf`
+`code`+`shop_id` is one of **three** example redirect URLs on Shopee's own auth
+guide — the other two use explicit `code=xxxxxx` / `shop_id=xxxxxx` /
+`main_account_id=xxxxxx` placeholders; the page uses Shopee's canonical doc
+`partner_id=10090` (sandbox `1000016`); no `partner_key` / `partner_secret` /
+`access_token` value / `refresh_token` value anywhere. But no PDF
+rasterizer / OCR was available (`poppler`, `ghostscript`, `imagemagick`,
+`pdf.js`, `pip` all absent; installing out of scope), so text baked into the
+screenshot images could not be inspected → all 5 stayed `HELD`, Gate `PARTIAL`.
 
-**Outcome:** the specific *detected* value in SPD-001 is a documentation example
-(safe), but **none of the 5 can be cleared** because each is a screenshot-heavy
-credential-context page and no renderer/OCR is available to inspect the image
-content. All 5 remain **`HELD`**, git-ignored, **not committed**. No PDF was
-edited (provenance rule §3); no sanitized copy was produced (nothing visually
-identifiable to redact). SHA-256 of all 5 verified byte-identical to the
-originals.
+**Pass 3 (2026-09-03) — `MANUAL_VISUAL_REVIEW_BY_MAINTAINER = PASS`.** The
+maintainer manually opened and visually inspected the 5 PDFs and confirmed:
+credential/key/token/code values visible in them are **`DOCUMENTATION_EXAMPLE`**
+values provided by Shopee; **there is currently no Product Factory App created in
+the Shopee Open Platform account**, so none of these PDFs contains credentials
+generated for or belonging to our application/account. Integrity re-checked:
+SHA-256 of all 5 byte-identical to the pre-reorganization originals. The 5
+**original, unmodified** PDFs were then added to Git and the temporary
+`.gitignore` (which existed solely to hold them) was removed.
 
-**Secret Gate: `PARTIAL`** — 30/35 committed clean; 5 ambiguous pending a visual
-review by a maintainer with a PDF viewer / OCR.
+| SPD | File | `security_review` | `security_review_method` | credential-shaped values | `artifact_state` |
+|---|---|---|---|---|---|
+| SPD-001 | `authorization/authentication.pdf` | PASS | MANUAL_VISUAL_REVIEW_BY_MAINTAINER (+ automated non-visual) | `DOCUMENTATION_EXAMPLE` (OAuth `code` / `shop_id` in example redirect URLs; doc `partner_id=10090`) | `COMMITTED_OR_READY` |
+| SPD-005 | `getting-started/create-your-app.pdf` | PASS | MANUAL_VISUAL_REVIEW_BY_MAINTAINER | `DOCUMENTATION_EXAMPLE` (no App exists in the maintainer's account → no real Partner Key present) | `COMMITTED_OR_READY` |
+| SPD-006 | `getting-started/authorize-your-first-shop.pdf` | PASS | MANUAL_VISUAL_REVIEW_BY_MAINTAINER | `DOCUMENTATION_EXAMPLE` | `COMMITTED_OR_READY` |
+| SPD-007 | `getting-started/make-your-first-api-call.pdf` | PASS | MANUAL_VISUAL_REVIEW_BY_MAINTAINER | `DOCUMENTATION_EXAMPLE` | `COMMITTED_OR_READY` |
+| SPD-008 | `getting-started/sandbox-testing.pdf` | PASS | MANUAL_VISUAL_REVIEW_BY_MAINTAINER | `DOCUMENTATION_EXAMPLE` | `COMMITTED_OR_READY` |
 
-The 30 committed PDFs passed a stdlib text-stream + `/URI` scan (no `partner_key`
-/ token / cookie / private-key / bearer patterns; only PDF binary/font artefacts
-and documentation-example email addresses).
+No PDF was edited / sanitized / redacted / re-exported / recompressed —
+the 5 are the immutable originals. No value is stored or reproduced in this
+metadata.
+
+**Secret Gate: `PASS`** — all 35 artifacts reviewed; the previously-HELD 5 are
+cleared by maintainer visual review. The 30 from pass 1 passed the automated
+stdlib text-stream + `/URI` scan (no `partner_key` / token / cookie /
+private-key / bearer patterns; only PDF binary/font artefacts and
+documentation-example email addresses).
 
 ## Artifact state (brief §6)
 
@@ -53,12 +74,9 @@ Every SPD carries one of: `COMMITTED_OR_READY` (in the repo now) · `SANITIZED`
 
 | State | SPDs | Count |
 |---|---|---|
-| `COMMITTED_OR_READY` | SPD-002, SPD-003, SPD-004, SPD-009 … SPD-035 | 30 |
+| `COMMITTED_OR_READY` | SPD-001 … SPD-035 (all) | 35 |
 | `SANITIZED` | *(none)* | 0 |
-| `HELD` | SPD-001, SPD-005, SPD-006, SPD-007, SPD-008 | 5 |
-
-`HELD` artifacts are **not** repository-available (present on disk for structure,
-`.gitignore`d, uncommitted).
+| `HELD` | *(none)* | 0 |
 
 ## Registry
 
@@ -69,14 +87,14 @@ image-rendered and no text extractor / OCR was available to read it.
 
 | SPD | Path | Title (verbatim) | Surface | Cap# | Market | API ver | Captured | Auth ctx | Type | Complete | Primary | Supports (claim ids) | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| SPD-001 | `docs/marketplaces/shopee/open-platform/authorization/authentication.pdf` | Developer Guide — Authentication | Developer Guide | 02 | GLOBAL (multi-region: `.com` / `.com.br` / `.cn` auth URLs) | v2 | 2026-09-01 | UNKNOWN | print-to-PDF | FULL | VERIFIED_PRIMARY | SCL-001, SCL-002, SCL-003, SCL-004, SCL-005 | **HELD** — the detected OAuth `code`+`shop_id` is a `DOCUMENTATION_EXAMPLE` (see 2nd-pass table above), but 117 large screenshots could not be visually inspected here → not cleared. |
+| SPD-001 | `docs/marketplaces/shopee/open-platform/authorization/authentication.pdf` | Developer Guide — Authentication | Developer Guide | 02 | GLOBAL (multi-region: `.com` / `.com.br` / `.cn` auth URLs) | v2 | 2026-09-01 | UNKNOWN | print-to-PDF | FULL | VERIFIED_PRIMARY | SCL-001, SCL-002, SCL-003, SCL-004, SCL-005 | `security_review: PASS` (`MANUAL_VISUAL_REVIEW_BY_MAINTAINER`). OAuth `code`/`shop_id` in example redirect URLs = `DOCUMENTATION_EXAMPLE`. Original, unmodified. |
 | SPD-002 | `docs/marketplaces/shopee/open-platform/getting-started/develop-an-integration.pdf` | Developer Guide — Desenvolva uma integração | Developer Guide | — | GLOBAL (captured pt-BR) | n/a | 2026-09-03 | UNKNOWN | print-to-PDF | FULL | VERIFIED_PRIMARY | SCL-010, SCL-142 | Onboarding overview. Has extractable text (~11k chars); text scan clean. |
 | SPD-003 | `docs/marketplaces/shopee/open-platform/getting-started/create-a-login.pdf` | Developer Guide — Crie um login | Developer Guide | — | GLOBAL (captured pt-BR) | n/a | 2026-09-03 | UNKNOWN | print-to-PDF | FULL | VERIFIED_PRIMARY | SCL-010 | Image-only; text scan clean. BR-specificity not verified. |
 | SPD-004 | `docs/marketplaces/shopee/open-platform/getting-started/create-developer-account.pdf` | Developer Guide — Crie a conta de desenvolvedor | Developer Guide | — | GLOBAL (captured pt-BR) | n/a | 2026-09-03 | UNKNOWN | print-to-PDF | FULL | VERIFIED_PRIMARY | SCL-010, SCL-011 | Image-only; text scan clean. |
-| SPD-005 | `docs/marketplaces/shopee/open-platform/getting-started/create-your-app.pdf` | Developer Guide — Crie seu App | Developer Guide | — | GLOBAL (captured pt-BR) | n/a | 2026-09-03 | UNKNOWN | print-to-PDF | FULL | VERIFIED_PRIMARY | SCL-010, SCL-014 | **HELD** — §8 high-risk, OCR unavailable. |
-| SPD-006 | `docs/marketplaces/shopee/open-platform/getting-started/authorize-your-first-shop.pdf` | Developer Guide — Autorize sua primeira loja | Developer Guide | — | GLOBAL (captured pt-BR) | v2 | 2026-09-03 | UNKNOWN | print-to-PDF | FULL | VERIFIED_PRIMARY | SCL-001, SCL-010 | **HELD** — §8 high-risk, OCR unavailable. Has ~14k chars extractable text; text scan clean. |
-| SPD-007 | `docs/marketplaces/shopee/open-platform/getting-started/make-your-first-api-call.pdf` | Developer Guide — Faça sua primeira chamada de API | Developer Guide | — | GLOBAL (captured pt-BR) | v2 | 2026-09-03 | UNKNOWN | print-to-PDF | FULL | VERIFIED_PRIMARY | SCL-003, SCL-004, SCL-010 | **HELD** — §8 high-risk, OCR unavailable. |
-| SPD-008 | `docs/marketplaces/shopee/open-platform/getting-started/sandbox-testing.pdf` | Developer Guide — Realize testes (Sandbox) | Developer Guide | — | GLOBAL (captured pt-BR) | n/a | 2026-09-03 | UNKNOWN | print-to-PDF | FULL | VERIFIED_PRIMARY | SCL-013 | **HELD** — §8 high-risk, OCR unavailable. |
+| SPD-005 | `docs/marketplaces/shopee/open-platform/getting-started/create-your-app.pdf` | Developer Guide — Crie seu App | Developer Guide | — | GLOBAL (captured pt-BR) | n/a | 2026-09-03 | UNKNOWN | print-to-PDF | FULL | VERIFIED_PRIMARY | SCL-010, SCL-014 | `security_review: PASS` (`MANUAL_VISUAL_REVIEW_BY_MAINTAINER`). No App exists in the account → no real Partner Key present; values are `DOCUMENTATION_EXAMPLE`. |
+| SPD-006 | `docs/marketplaces/shopee/open-platform/getting-started/authorize-your-first-shop.pdf` | Developer Guide — Autorize sua primeira loja | Developer Guide | — | GLOBAL (captured pt-BR) | v2 | 2026-09-03 | UNKNOWN | print-to-PDF | FULL | VERIFIED_PRIMARY | SCL-001, SCL-010 | `security_review: PASS` (`MANUAL_VISUAL_REVIEW_BY_MAINTAINER`). Values are `DOCUMENTATION_EXAMPLE`. |
+| SPD-007 | `docs/marketplaces/shopee/open-platform/getting-started/make-your-first-api-call.pdf` | Developer Guide — Faça sua primeira chamada de API | Developer Guide | — | GLOBAL (captured pt-BR) | v2 | 2026-09-03 | UNKNOWN | print-to-PDF | FULL | VERIFIED_PRIMARY | SCL-003, SCL-004, SCL-010 | `security_review: PASS` (`MANUAL_VISUAL_REVIEW_BY_MAINTAINER`). Values are `DOCUMENTATION_EXAMPLE`. |
+| SPD-008 | `docs/marketplaces/shopee/open-platform/getting-started/sandbox-testing.pdf` | Developer Guide — Realize testes (Sandbox) | Developer Guide | — | GLOBAL (captured pt-BR) | n/a | 2026-09-03 | UNKNOWN | print-to-PDF | FULL | VERIFIED_PRIMARY | SCL-013 | `security_review: PASS` (`MANUAL_VISUAL_REVIEW_BY_MAINTAINER`). Sandbox values are `DOCUMENTATION_EXAMPLE`. |
 | SPD-009 | `docs/marketplaces/shopee/open-platform/getting-started/publish-your-app-go-live.pdf` | Developer Guide — Publique seu App (Go Live) | Developer Guide | — | GLOBAL (captured pt-BR) | n/a | 2026-09-03 | UNKNOWN | print-to-PDF | FULL | VERIFIED_PRIMARY | SCL-012, SCL-014 | Image-only; text scan clean. |
 | SPD-010 | `docs/marketplaces/shopee/open-platform/product/item/add-item.pdf` | Documentation — v2.product.add_item | API Reference | 04 | GLOBAL | v2 | 2026-09-01 | UNKNOWN | print-to-PDF | FULL | VERIFIED_PRIMARY | SCL-020, SCL-021, SCL-022, SCL-023 | Image-only; text scan clean. |
 | SPD-011 | `docs/marketplaces/shopee/open-platform/product/item/get-item-base-info.pdf` | Documentation — v2.product.get_item_base_info | API Reference | 05 | GLOBAL | v2 | 2026-09-01 | UNKNOWN | print-to-PDF | FULL | VERIFIED_PRIMARY | SCL-024, SCL-025, SCL-026, SCL-027 | Image-only; text scan clean. |

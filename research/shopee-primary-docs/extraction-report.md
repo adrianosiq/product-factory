@@ -9,12 +9,15 @@ primary artifacts**.
 
 ## Executive checkpoint
 
-**Update 2026-09-03 — artifacts received.** 35 official Shopee Open Platform
-print-to-PDF exports were supplied and are now registered as `SPD-001…SPD-035`
+**Update 2026-09-03 — artifacts received; Secret Gate PASS.** 35 official Shopee
+Open Platform print-to-PDF exports were supplied, registered as `SPD-001…SPD-035`
 (`evidence-registry.md`) and organized under
-`docs/marketplaces/shopee/open-platform/`. Secret gate: **30 committed, 5 HELD**
-(SPD-001 has an OAuth `code`+`shop_id` in an example URL; SPD-005–008 are
-image-only §8-high-risk pages with no OCR available here).
+`docs/marketplaces/shopee/open-platform/`. **All 35 committed.** The 5 initially
+held were cleared by `MANUAL_VISUAL_REVIEW_BY_MAINTAINER = PASS` (credential-shaped
+values are Shopee doc examples; no Product Factory App exists in the account).
+**Artifact safety = PASS; primary evidence intake = COMPLETE.** This is **not** P0
+documentation-coverage completion — see §13 (`LOGISTICS PRIMARY DOCUMENTATION
+MISSING`); the two are separate dimensions.
 
 **Extraction has NOT been performed.** Sections 1–18 below and the P0 completion
 matrix still read as of the pre-artifact checkpoint except the "Primary artifact
