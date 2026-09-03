@@ -9,18 +9,25 @@ primary artifacts**.
 
 ## Executive checkpoint
 
-**No primary Shopee artifact was supplied, and none is reachable** (per Phase
-02.2: `open.shopee.com`, `developer.shopee.com` and `web.archive.org` are blocked
-at the fetch-tool level; the portal is a client-rendered SPA). Phase 02.3
-**forbids** substituting another broad web-research pass or using
-community/integrator/forum sources to upgrade implementation-critical rules.
+**Update 2026-09-03 — artifacts received; Secret Gate PASS.** 35 official Shopee
+Open Platform print-to-PDF exports were supplied, registered as `SPD-001…SPD-035`
+(`evidence-registry.md`) and organized under
+`docs/marketplaces/shopee/open-platform/`. **All 35 committed.** The 5 initially
+held were cleared by `MANUAL_VISUAL_REVIEW_BY_MAINTAINER = PASS` (credential-shaped
+values are Shopee doc examples; no Product Factory App exists in the account).
+**Artifact safety = PASS; primary evidence intake = COMPLETE.** This is **not** P0
+documentation-coverage completion — see §13 (`LOGISTICS PRIMARY DOCUMENTATION
+MISSING`); the two are separate dimensions.
 
-Therefore **nothing has been ingested and no claim has moved to
-`PRIMARY_VERIFIED`.** This document is the intake structure + the acquisition
-checklist; sections 1–18 are placeholders to be filled once artifacts arrive.
+**Extraction has NOT been performed.** Sections 1–18 below and the P0 completion
+matrix still read as of the pre-artifact checkpoint except the "Primary artifact
+obtained?" column (now ✓ where a `docs/` PDF exists). No claim in
+`claim-registry.md` has moved to `PRIMARY_VERIFIED`; `reconciliation-report.md`
+is unchanged. The next pass reads the PDFs and does field extraction +
+reconciliation.
 
-**Phase 02.3 final decision: `PRIMARY DOCUMENTATION REQUIRED`** (§"Final
-decision" below).
+The original **`PRIMARY DOCUMENTATION REQUIRED`** decision (below) is
+**superseded** — the blocker it described (no artifacts) is resolved.
 
 ---
 
@@ -95,9 +102,14 @@ behaviour. SCL-090…SCL-094. Implementation-critical.
 
 ## 13. Logistics findings (P0)
 
-None. Open: DTS-limit resource (confirmed to be in the `logistics` service, exact
-name unknown); weight/dimension requiredness; pre-order; dangerous goods.
-SCL-100…SCL-102.
+**`LOGISTICS PRIMARY DOCUMENTATION MISSING`** — no `logistics`-service page
+(`get_channel_list`, `get_address`, days-to-ship / handling-time limit) was among
+the 35 supplied artifacts. This is a **P0 coverage gap**: it does not block
+finishing the docs reorganization, but it **blocks declaring Phase 02.3 P0
+contract coverage complete**. Open: DTS-limit resource (in the `logistics`
+service per Phase 02.2, exact name unknown); weight/dimension requiredness;
+pre-order; dangerous goods. SCL-100…SCL-102. Not to be solved in this
+docs-safety correction.
 
 ## 14. Media findings (P1)
 
@@ -133,22 +145,23 @@ All Phase 02.2 gaps G1–G8 remain, plus everything in `claim-registry.md`
 
 ## P0 completion matrix (brief §44)
 
-| Contract area | Primary artifact obtained? | Primary verification | Remaining gap |
+| Contract area | Primary artifact obtained? | Primary verification (extraction) | Remaining gap |
 |---|---|---|---|
-| Brazil eligibility | ✗ no | none | full — eligibility, approval, sandbox, function-groups |
-| Auth | ✗ no | none | flow, token exchange/refresh, exact signing, host/version |
-| Add Item | ✗ no | none | full field set, response/error shape |
-| Get Item | ✗ no | none | id args (`product_id` scope), status, field representation |
-| Variations / Models | ✗ no | none | lifecycle, caps, **hidden default model** |
-| Categories | ✗ no | none | leaf-only rule, status field, restrictions |
-| Attributes | ✗ no | none | `is_mandatory` reality, full schema, conditionality |
-| Brands | ✗ no | none | category-dependent requiredness, `register_brand` behaviour |
-| Identifiers | ✗ no | none | field, scope, requiredness, validation, absence |
-| Price | ✗ no | none | scope, batch, `price_limit` source |
-| Stock | ✗ no | none | absolute/delta, warehouse dimension, concurrency |
-| Logistics | ✗ no | none | DTS resource, weight/dims requiredness, pre-order |
+| Brazil eligibility | ⚠ partial — SPD-035 (BR SPI app creation); SPD-002/004/009/035 (journey) | not started | eligibility criteria, approval bar, function-groups — **SPD-001 (auth) + SPD-005–008 HELD** |
+| Auth | ✓ SPD-001 *(HELD)* | not started | needs SPD-001 committed/reviewed; exact signing base string |
+| Add Item | ✓ SPD-010 | not started | full field set, response/error shape |
+| Get Item | ✓ SPD-011 | not started | `product_id` scope, status, field representation |
+| Variations / Models | ✓ SPD-015–020 | not started | caps, **hidden default model** (SPD-020) |
+| Categories | ✓ SPD-021, SPD-022 | not started | leaf-only rule, status field, restrictions |
+| Attributes | ✓ SPD-023, SPD-024 | not started | `is_mandatory` reality, full schema, conditionality |
+| Brands | ✓ SPD-025, SPD-026 | not started | category-dependent requiredness, `register_brand` behaviour |
+| Identifiers | ⚠ likely inside SPD-010 / SPD-023 | not started | dedicated coverage; field, scope, requiredness, absence |
+| Price | ✓ SPD-027 | not started | scope, batch, `price_limit` source |
+| Stock | ✓ SPD-028 | not started | absolute/delta, warehouse dimension, concurrency |
+| Logistics | ✗ no | none | no logistics/DTS page supplied — DTS resource, weight/dims requiredness, pre-order |
 
-**0 / 12 P0 areas have primary evidence. Phase 02.4 cannot start.**
+**Artifacts now cover ~11 / 12 P0 areas (logistics missing; auth + 4 onboarding
+pages HELD). Extraction has not run — Phase 02.4 still cannot start.**
 
 ---
 
