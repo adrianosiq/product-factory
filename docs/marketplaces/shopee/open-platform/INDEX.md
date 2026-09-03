@@ -18,10 +18,16 @@ evidence registry (SPD id is the stable identity; the path may change).
 
 ## Status
 
-- **30 of 35 PDFs are committed.** **5 are HELD pending secret review** and are
-  git-ignored (see `.gitignore` at repo root and the table below): they contain,
-  or may contain, credential-shaped values that could not be cleared without a
-  PDF renderer / OCR.
+- **30 of 35 PDFs are committed.** **5 remain HELD** and are git-ignored (see
+  `.gitignore` at repo root and the table below). 2nd-pass review (2026-09-03):
+  a deep non-visual scan (all link URIs, form fields, rendered text, image
+  inventory) of the 5 is **clean** — and the one credential-shaped value
+  detected earlier (an OAuth `code` in `authentication.pdf`) is a
+  **documentation example** (it sits beside `code=xxxxxx` placeholder variants on
+  Shopee's own auth guide). But all 5 are screenshot-heavy credential-context
+  pages, and **no PDF renderer / OCR is available here** to inspect the image
+  content, so none can be cleared. A maintainer with a PDF viewer should eyeball
+  them. **Secret Gate: PARTIAL.**
 - No claim in `claim-registry.md` has been promoted to `PRIMARY_VERIFIED` yet —
   extraction / reconciliation is the resumed Phase 02.3 pass, not this
   organization pass.

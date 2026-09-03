@@ -99,9 +99,14 @@ behaviour. SCL-090…SCL-094. Implementation-critical.
 
 ## 13. Logistics findings (P0)
 
-None. Open: DTS-limit resource (confirmed to be in the `logistics` service, exact
-name unknown); weight/dimension requiredness; pre-order; dangerous goods.
-SCL-100…SCL-102.
+**`LOGISTICS PRIMARY DOCUMENTATION MISSING`** — no `logistics`-service page
+(`get_channel_list`, `get_address`, days-to-ship / handling-time limit) was among
+the 35 supplied artifacts. This is a **P0 coverage gap**: it does not block
+finishing the docs reorganization, but it **blocks declaring Phase 02.3 P0
+contract coverage complete**. Open: DTS-limit resource (in the `logistics`
+service per Phase 02.2, exact name unknown); weight/dimension requiredness;
+pre-order; dangerous goods. SCL-100…SCL-102. Not to be solved in this
+docs-safety correction.
 
 ## 14. Media findings (P1)
 
