@@ -21,9 +21,12 @@ phase_02_3_note: >-
   `get_dts_limit` page. `error_category_dts` / `error_param_dts_exceeds_max_limit`
   / `error_param_category_not_support_pre_order` on violation.
 phase_02_2_note: >-
-  Days-to-ship / handling-time limits live in a `logistics` service, not the
-  `product` service — Phase 02.1's `get_dts_limit` under `product` is corrected.
-  `logistics/get_channel_list` and `logistics/get_address` corroborated. See
+  HISTORICAL (superseded by phase_02_3_note above). Phase 02.2 filed days-to-ship
+  limits under a `logistics` service — Phase 02.3 (SPD-029) found the **DTS limit
+  values in `get_item_limit.days_to_ship_limit`**; `add_item` prose also names a
+  dedicated `get_dts_limit` page (not in the corpus). The `logistics` service
+  endpoints (`get_channel_list`, `get_address`, `get_warehouse_detail`) remain
+  `PRIMARY_NOT_FOUND` — the LOGISTICS gap (G9) stands. See
   `research/shopee-api-contract/phase-02.2-report.md` §21, §29 (C3).
 
 ## 1. What is (weakly) known
@@ -34,7 +37,7 @@ phase_02_2_note: >-
 | Package dimensions | `{ package_length, package_width, package_height }` (cm); may be required per channel / category | `SEARCH_INDEXED` |
 | Channels | `logistics/get_channel_list` → channels enabled for the shop; at least one must be enabled on the listing | `SEARCH_INDEXED` |
 | Addresses | `logistics/get_address` → pickup / return / default `address_id` (a shop setting) | `SEARCH_INDEXED` |
-| Handling time / days-to-ship | `days_to_ship`; category limits via a **`logistics`-service** resource — **not** a `product` resource (Phase 02.2 corrects Phase 02.1's `get_dts_limit` filing; exact name `UNVERIFIED`) | `SEARCH_INDEXED` / `UNVERIFIED` |
+| Handling time / days-to-ship | `days_to_ship`; category limit values from **`get_item_limit.days_to_ship_limit {min, max, non_pre_order_days_to_ship}`** (`PRIMARY_VERIFIED`, SPD-029). `add_item` prose also names a dedicated `get_dts_limit` page — **not in the corpus**. | `PRIMARY_VERIFIED` (limit source) |
 | Weight recommendation | `product/get_weight_rec` (a recommendation, not a limit) | `SEARCH_INDEXED` (S12) |
 | Pre-order | `pre_order { is_pre_order, days_to_ship }`; a longer ship window (v1 said 7–30) | `SEARCH_INDEXED`; numbers `⚠ verify` |
 | Condition | `condition ∈ NEW | USED`; USED appears category-gated in BR | `SEARCH_INDEXED`, LOW–MEDIUM |
@@ -50,19 +53,20 @@ Resolve, per shop / category, before enforcing:
   interaction,
 - **pickup vs drop-off** — address requirements,
 - **fulfilment** — Envios Shopee eligibility and its effect on stock / handling,
-- **pre-order** — allowed window, category restrictions, exact `days_to_ship`
-  bounds,
-- **dangerous goods** — is there an `item_dangerous` flag; which categories;
-  what documentation,
-- **handling time** — category `get_dts_limit` min / max.
+- **pre-order** — allowed window, category restrictions (`error_param_category_not_support_pre_order`),
+- **dangerous goods** — `item_dangerous` flag is documented for ID/MY only;
+  BR applicability `PRIMARY_NOT_FOUND`,
+- **handling time** — resolve `get_item_limit.days_to_ship_limit` (min / max /
+  `non_pre_order_days_to_ship`) for the category.
 
 ## 3. Readiness impact
 
 - No enabled logistics channel, or missing weight, in a resolved context →
   `PUBLICATION_STATUS = FAIL` (`resolve_logistics`).
 - Logistics context unresolved → `PUBLICATION_STATUS = REVIEW`.
-- `days_to_ship` outside a resolved `get_dts_limit` range → `PUBLICATION_STATUS =
-  FAIL` (`resolve_dts_limit`).
+- `days_to_ship` outside the resolved `get_item_limit.days_to_ship_limit` range →
+  `PUBLICATION_STATUS = FAIL` (`resolve_dts_limit`; `error_category_dts` /
+  `error_param_dts_exceeds_max_limit`).
 - `condition = USED` where the resolved category disallows it →
   `PUBLICATION_STATUS = FAIL` (`resolve_condition_allowed`); also a compliance
   check (`references/compliance.md`).

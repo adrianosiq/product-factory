@@ -103,41 +103,44 @@ just a quota, not the limit source" is rejected.**
   `get_item_limit.gtin_limit.gtin_validation_rule`; model-level (BR + TW).
   No `EMPTY_GTIN_REASON` analogue — the mechanism is the literal `"00"`.
 
-## 1. Critical current limitation
+## 1. Status (Phase 02.3)
 
-> **No Shopee Open Platform API contract has been verified from a readable
-> primary API source.**
+> **The `v2.product.*` + `auth` listing contract HAS been verified** against 35
+> official Shopee Open Platform pages (§0; `research/shopee-primary-docs/`).
 
-Consequences:
+- §0 carries the `PRIMARY_VERIFIED` facts (hosts, auth + signing contract, token
+  lifetimes, `get_item_limit`, entity / lifecycle, attribute / brand / GTIN).
+  Where §0 and any older row below disagree, **§0 wins.**
+- Still **not** covered by a primary page — treat as `SEARCH_INDEXED` at best,
+  `UNVERIFIED` for detail: the `logistics` service (`get_channel_list`,
+  `get_address`, `get_warehouse_detail`), `media_space` upload pages,
+  `search_attribute_value_list`, `get_recommend_attribute` full schema,
+  `update_item` full field list, penalty / content-diagnosis / violation APIs.
+- Community SDK / integrator endpoint names still do **not** upgrade a rule.
+- The Skill output remains **publish-agnostic**: a listing draft + audit JSON.
+  Building a client / auth flow / publish pipeline is Phase 02.4+, not this file.
 
-- No endpoint path, request field, payload shape, response shape or numeric
-  limit below is authoritative. Treat all as `⚠ verify`.
-- Community SDK / integrator endpoint names do **not** upgrade a rule to
-  `OFFICIAL`. They establish only that an endpoint *plausibly* exists.
-- The Skill output is **publish-agnostic**: a listing draft + audit JSON. It does
-  not assume an execution pipeline exists.
-- If and when a maintainer gets portal or sandbox access (Phase 02.3 —
-  Primary Documentation Ingestion), transcribe the real pages, fill the schemas,
-  and flip each row's `verification` from `SEARCH_INDEXED` / `UNVERIFIED` to
-  `LIVE`. The doc-locator column below (`open.shopee.com/documents/v2/v2.product.<method>?module=89&type=1`)
-  is where to look; those URLs have **not** been read.
+## 2. Auth model — `PRIMARY_VERIFIED` (see §0 for the authoritative contract)
 
-## 2. Auth model (reconstructed — `SEARCH_INDEXED`, `⚠ verify`)
+The exact auth + signing contract is in §0 (SPD-001). Summary:
 
-| Element | Reconstructed value | Verification |
+| Element | Value | Verification |
 |---|---|---|
-| Partner identity | `partner_id` + `partner_key` (a.k.a. `partner_secret`) | `SEARCH_INDEXED` |
-| Shop authorisation | OAuth redirect (`shop/auth_partner`) → auth `code` → token exchange; one app authorises many shops | `SEARCH_INDEXED` |
-| Access token | `access_token`, lifetime ≈ 4 h | `SEARCH_INDEXED`; timing `⚠ verify` |
-| Refresh token | `refresh_token`, lifetime ≈ 30 d, rotates on use | `SEARCH_INDEXED`; timing `⚠ verify` |
-| Token scoping | per `shop_id`; stored per shop; one app authorises many shops | `SEARCH_INDEXED`, MEDIUM (S12–S15) |
-| Version prefix | `/api/v2` | `SEARCH_INDEXED`, MEDIUM (S13 schema names + S14 + S15) |
-| Hosts | global `partner.shopeemobile.com`; sandbox `partner.test-stable.shopeemobile.com`; CN `openplatform.shopee.cn`. A **`openplatform.shopee.com.br`** string appears in **one** SDK's region config — an existence signal for a BR Open Platform surface, **not** verified as the canonical production base URL for Product API calls. | `SEARCH_INDEXED` · SINGLE_SOURCE (BR host); `⚠ verify` which host serves BR Product API |
-| Token exchange / refresh | `POST /api/v2/auth/token/get` · `POST /api/v2/auth/access_token/get` | `SEARCH_INDEXED`, MEDIUM |
-| Request signing | HMAC-SHA256 over a base string ≈ `partner_id + api_path + timestamp + [access_token] + [shop_id]`; timestamp in **seconds** | `SEARCH_INDEXED`; exact composition & param order `⚠ verify` — **do not implement** |
-| Multi-shop grouping | `merchant_id` for SIP / cross-border flows; `main_account_id` at token exchange in some flows (`UNVERIFIED`) | `SEARCH_INDEXED` |
-| Local vs global catalogue | `v2.product.*` = a shop's own catalogue (BR listings); `v2.global_product.*` = cross-border seller catalogue — **out of scope** unless a CB model is confirmed | `SEARCH_INDEXED` (S13) |
-| Rate limits | exist; values unknown; back off on a rate-limit error | `UNVERIFIED` |
+| Partner identity | `partner_id` + `partner_key` | `PRIMARY_VERIFIED` (§0) |
+| Shop authorisation | build auth link → seller authorises shop(s) → `code` → `POST /api/v2/auth/token/get`; one app authorises many shops | `PRIMARY_VERIFIED` (§0) |
+| Access token | `access_token`, lifetime **4 h** | `PRIMARY_VERIFIED` (§0) |
+| Refresh token | `refresh_token`, lifetime **30 d**, single-use per `shop_id` / `merchant_id` | `PRIMARY_VERIFIED` (§0) |
+| Auth `code` / sign `timestamp` | `code` **10 min** single-use; timestamp window **5 min**; old access token valid **+5 min** after a refresh | `PRIMARY_VERIFIED` (§0) |
+| Authorization validity | **≤ 360 days** (SPD-006 onboarding guide says 365 — unresolved `PRIMARY_CONFLICT`; do not pick a side) | `PRIMARY_VERIFIED` with conflict |
+| Token scoping | per `shop_id` (or `main_account_id`); stored per shop | `PRIMARY_VERIFIED` (§0) |
+| Version prefix | `/api/v2` | `PRIMARY_VERIFIED` (§0) |
+| Hosts | Global `partner.shopeemobile.com`; **Brazil `openplatform.shopee.com.br`**; CN `openplatform.shopee.cn`; Sandbox Global `openplatform.sandbox.test-stable.shopee.sg` (all `/api/v2/<path>`). Auth-link host for BR: `open.shopee.com.br/auth`. | `PRIMARY_VERIFIED` (§0) |
+| Token exchange / refresh | `POST /api/v2/auth/token/get` · `POST /api/v2/auth/access_token/get` | `PRIMARY_VERIFIED` (§0) |
+| Request signing | HMAC-SHA256, key = partner key, hex lowercase, over the ordered base string **per API type** — Shop: `partner_id + api_path + timestamp + access_token + shop_id`; Merchant: `… + merchant_id`; Public: `partner_id + api_path + timestamp`. `partner_id` + `timestamp` + `sign` in the query; timestamp in **seconds**. | `PRIMARY_VERIFIED` (§0) |
+| Multi-shop grouping | `merchant_id` for Merchant APIs / SIP; `main_account_id` returned at redirect for a main account | `PRIMARY_VERIFIED` (§0) |
+| App-category permissions | app category chosen at creation, immutable; each API page lists its allowed APP types; calling outside the category → Permission Denied | `PRIMARY_VERIFIED` (§0) |
+| Local vs global catalogue | `v2.product.*` = a shop's own catalogue (BR listings); `v2.global_product.*` = cross-border seller catalogue — **out of scope** | `PRIMARY_VERIFIED` (SPD-010…029 corpus is entirely `v2.product.*`) |
+| Rate limits | exist; values `PRIMARY_NOT_FOUND`; back off on a rate-limit error | `UNVERIFIED` |
 
 ## 3. Endpoint registry — v2 `product` service
 
@@ -172,9 +175,9 @@ map + JSON schemas), S14 `rollout.com`, S15 `publicapis.io`/`api2cart.com`.
 | `get_attribute_tree` | attributes for a category — **corrects Phase 02.1 `get_attributes`** | `category_id`, `language` | S13 (S12: `get_attribute_tree` w/ `category_id_list`) |
 | `get_recommend_attribute` | suggested (quality) attributes for a category + name | `category_id`, `item_name` | S12, S13 |
 | `search_attr_value` | search attribute values | — | S12 |
-| `get_brand_list` | brands for a category (`brand_id`, names; "Sem marca" first) | `category_id`, `offset`, `page_size`, `status` | S2, S12, S13 |
+| `get_brand_list` | brands for a **leaf** category (`brand_id`, names; No-Brand = `brand_id: 0`); returns `is_mandatory` for the brand attribute | `category_id`, `offset`, `page_size` (max 100), `status` (1/2), `language` | SPD-025 |
 | `register_brand` | submit a seller/manufacturer brand — **Phase 01 said "not confirmed"; a name now exists** | — | S12 |
-| `get_item_limit` | **appears to represent a shop / item listing quota or listing capacity** (S13: no params, "the item listing limit for your shop"; S12 shows `item_name`, `category_id`). Exact primary semantics **pending**. **Must NOT be used as the resolution source for title / description / image / variation / price limits** — see §5. | (pending) | S12, S13 |
+| `get_item_limit` | **the dynamic limit source** (SPD-029, `PRIMARY_VERIFIED` — see §0). `GET`, optional `category_id`; `response` returns `item_name_length_limit`, `item_description_length_limit`, `extended_description_limit`, `item_image_count_limit`, `price_limit`, `stock_limit`, `tier_variation_name_length_limit`, `tier_variation_option_length_limit`, `days_to_ship_limit`, `weight_limit`, `dimension_limit`, `size_chart_limit`, `gtin_limit.gtin_validation_rule`, **and** `item_count_limit` (the shop's total-listing quota — one field, not the whole purpose). | optional `category_id` | SPD-029 |
 | `get_weight_rec` | weight recommendation | — | S12 |
 | `get_size_chart_list` / `get_size_chart_detail` | size-chart support (fashion) | — | S12 |
 | `get_cert_rule` | per-category certification rules (regulatory) — verify for `compliance.md` | `category_id`? | S12 |
@@ -186,13 +189,13 @@ map + JSON schemas), S14 `rollout.com`, S15 `publicapis.io`/`api2cart.com`.
 | `update_item` | edit listing fields | `item_id` + changed fields | S12, S13, S14 |
 | `delete_item` | delete a listing | `item_id` | S13 |
 | `unlist_item` | list / unlist toggle | `item_id`, `unlist` (bool) | S12, S13 |
-| `get_item_base_info` | core listing fields | `item_id_list` (S13 says ≤ 50 — SINGLE_SOURCE, treat as provisional). S14 calls the arg `product_id` — **`product_id` scope `UNRESOLVED`** (local alias vs `v2.global_product.*` / cross-border) | S13, S14 |
+| `get_item_base_info` | core listing fields | `item_id_list` limit **[0, 50]** (SPD-011, `PRIMARY_VERIFIED`). No `product_id` request parameter exists in the primary corpus — the integrator-page `product_id` is `PRIMARY_NOT_FOUND` as a local param; the read also returns `ssp_id` (Shopee Standard Product, catalogue-like — gap G6) and `deboost` | SPD-011 |
 | `get_item_extra_info` | sales / views / likes | `item_id_list` | S12, S13 |
 | `get_item_list` | listing ids by `item_status` | `offset`, `page_size`, `item_status` | S13 |
 | `search_item` | search shop listings | `offset`, `page_size` | S12, S13 |
-| `get_item_violation_info` | **per-item policy violations** — Phase 01 said none existed | `item_id` | S12, S13 |
-| `get_item_content_diagnosis_result` | **per-item content diagnosis** (listing-quality signal; closest thing to an ML `/performance` — post-creation, not a pre-publish gate) | `item_id` | S12, S13 |
-| `get_item_list_by_content_diagnosis` | items filtered by diagnosis status | `diagnosis_status`, `offset`, `page_size` | S12, S13 |
+| `get_item_violation_info` | per-item policy violations — **`NOT PRIMARY VERIFIED — DO NOT RELY ON FOR EXECUTION`**; a Phase 02.2 `SEARCH_INDEXED` community-SDK name, **not** in the 35-PDF corpus. Use `get_item_base_info.item_status` (`BANNED`) + `deboost` instead. | `item_id` | S12, S13 (non-primary) |
+| `get_item_content_diagnosis_result` | per-item content diagnosis — **`NOT PRIMARY VERIFIED — DO NOT RELY ON FOR EXECUTION`**; Phase 02.2 `SEARCH_INDEXED` name only, not in the corpus. | `item_id` | S12, S13 (non-primary) |
+| `get_item_list_by_content_diagnosis` | items filtered by diagnosis status — **`NOT PRIMARY VERIFIED`**, as above. | `diagnosis_status`, `offset`, `page_size` | S12, S13 (non-primary) |
 
 *Phase 02.1 listed `update_item_sku` — retained as `UNVERIFIED` (name from S7 only; not seen in S12/S13).*
 
@@ -229,7 +232,7 @@ implementation contract until primary docs are read.
 |---|---|---|
 | `logistics/get_channel_list` | logistics channels enabled for the shop | S15 |
 | `logistics/get_address` | pickup / return / default `address_id` | S15 |
-| days-to-ship limit | **expected here, not in `product`** — Phase 02.1's `get_dts_limit` under `product` is corrected; exact resource `UNVERIFIED` | — |
+| days-to-ship limit | **`get_item_limit.days_to_ship_limit`** (`{min, max, non_pre_order_days_to_ship}`, category-scoped) is the `PRIMARY_VERIFIED` source (SPD-029). `add_item` prose also names a dedicated `get_dts_limit` page — **not in the corpus**. The `logistics`-service filing from Phase 02.2 is superseded for the *limit* values. | SPD-029 |
 
 ### Brazil-specific (`br` service — `SEARCH_INDEXED`, S12; BR-only)
 | Method | Purpose | Evidence |
@@ -241,24 +244,30 @@ implementation contract until primary docs are read.
 ### Enforcement / validation
 | Resource | Status |
 |---|---|
-| `public/get_shop_penalty` / account-health | `UNVERIFIED` for BR (other markets) |
-| pre-publication validate / dry-run | **NO_DEDICATED_VALIDATOR_FOUND** — searched a 380-endpoint SDK + a "100% coverage" SDK; no `validate` / `dry-run` / `precheck` in `v2.product.*`. Not a primary-confirmed negative. The `add_item` / `update_item` response is the gate (shape `UNVERIFIED`). `get_item_content_diagnosis_result` is **post**-creation, not a pre-publish check. |
+| `public/get_shop_penalty` / account-health | `PRIMARY_NOT_FOUND` for BR (no penalty-points API page in the corpus). `error_seller_under_penalty` on `update_price` / `update_stock` + `get_item_base_info.deboost` are the primary-verified signals. |
+| pre-publication validate / dry-run | `NO_DEDICATED_VALIDATOR_FOUND_IN_PRIMARY_CORPUS` — no `validate` / `dry-run` / `precheck` / content-diagnosis / violation endpoint in the 35 PDFs. **Not asserting absence.** The `add_item` / `update_item` response + the large enumerated business error-code set (`PRIMARY_VERIFIED`) is the gate. `get_item_content_diagnosis_result` / `get_item_violation_info` are `PRIMARY_NOT_FOUND` — do not rely on them. |
 
-## 4. Brazil access (gap G2) — `PRIMARY_VERIFIED` (Phase 02.3)
+## 4. Brazil access (gap G2) — `PRIMARY_PARTIAL` (Phase 02.3)
 
 Primary evidence (SPD-003, SPD-004, SPD-005, SPD-008, SPD-009, SPD-035):
 
-- **The BR Product/listing API is available.** Every `v2.product.*` reference
-  page lists the Brazil host `https://openplatform.shopee.com.br/api/v2/…`; the
-  auth doc lists `https://open.shopee.com.br/auth`; `add_item` carries
-  BR-specific fields (`tax_info` NCM/CFOP/CEST/CSOSN/PIS/COFINS/ICMS,
-  `export_cfop`, model-level `gtin_code` "BR local seller", 2-decimal prices).
+- **BR Product API availability is a derived conclusion** (`PRIMARY_DERIVED`, not
+  a single explicit Shopee declaration): every `v2.product.*` reference page
+  lists the Brazil host `https://openplatform.shopee.com.br/api/v2/…`; the auth
+  doc lists `https://open.shopee.com.br/auth`; `add_item` carries BR-specific
+  fields (`tax_info` NCM/CFOP/CEST/CSOSN/PIS/COFINS/ICMS, `export_cfop`,
+  model-level `gtin_code` "BR local seller", 2-decimal prices). Taken together
+  these explicitly document a **BR production Product API** — but no page states
+  "the Product API is available to Brazil sellers" as one sentence.
 - **Two approval gates:**
   1. **Developer profile** — a login alone can't create apps; you apply for a
-     developer profile and are **approved by Shopee's internal review**
-     (`developer-guide/12`, criteria page not supplied). BR has **only two
-     developer types**: `Registered Business Seller` and `Third-party Partner
-     (ISV)`.
+     developer profile and are **approved by Shopee's internal criteria**
+     (`developer-guide/12`, criteria page not supplied — `PRIMARY_NOT_FOUND`).
+     The BR Developer Guide lists two developer types for this journey:
+     `Registered Business Seller` and `Third-party Partner (ISV)` (SPD-004).
+     (SPD-035's BR SPI App guide separately names `Individual Seller` as a
+     developer type in the Seller-Logistics / SPI context — a different scope;
+     do not force the two lists into a conflict.)
   2. **Go-Live review** — Production access requires submitting a Product Brief +
      Redirect URL domains + IP whitelist + IT-assets declaration; **Shopee
      reviews before approving Production**. Sandbox is independent and available
@@ -267,19 +276,24 @@ Primary evidence (SPD-003, SPD-004, SPD-005, SPD-008, SPD-009, SPD-035):
   Registered Business Seller → `Seller In-House System`; ISV → `ERP System`.
   Both list `add_item` / `update_stock` / `get_category` / `get_attribute_tree`
   / `get_brand_list` / `get_item_limit` etc. in "APP types that can call this
-  API" and are **not** whitelist-gated. Whitelist-only applies to `Swarm ERP`,
-  `Brand Membership`, `Auto Parts Installation` **SPI** apps (SPD-035) — not the
-  listing APIs.
+  API". **No separate per-category whitelist is documented in the primary corpus
+  for these listing-API app categories** — unlike `Swarm ERP`, `Brand
+  Membership`, `Auto Parts Installation` **SPI** apps, which SPD-035 explicitly
+  marks "Whitelist Only". Absence of a documented whitelist for the listing
+  categories is **not** proof that no whitelist exists — and the developer
+  profile itself is still approval-gated (above).
 
 **Consequence:** `resolve_open_platform_br_access` becomes an **account/app
 readiness** check: does this shop's authorising app have (a) an approved BR
 developer profile of an eligible type, (b) an app in a listing-capable category,
 (c) a completed Go-Live for Production? Pending → `EXECUTION = REVIEW`; a
 confirmed missing gate → `EXECUTION = FAIL` for the target op (fall back to
-manual/Seller-Center publish). **Never** a global `FAIL` on "availability".
+manual/Seller-Center publish). **Never** a global `FAIL` on "availability", and
+**no universal claim** that every BR developer is eligible.
 
-`PRIMARY_NOT_FOUND`: the exact developer-profile approval criteria; whether
-`register_brand` is supported in BR.
+`PRIMARY_NOT_FOUND`: the exact developer-profile approval criteria; whether any
+per-category whitelist applies to the listing APIs; whether `register_brand` is
+supported in BR.
 
 <!-- superseded Phase 02.2 wording follows for history -->
 
@@ -290,7 +304,7 @@ production-approval bar; account-type restrictions. The non-primary evidence
 unavailable — **but the state is not recorded as `CONFIRMED_RESTRICTED`** until
 primary eligibility / onboarding material is ingested (Phase 02.3).
 
-Until resolved (Phase 02.3):
+Operational posture (until an approved BR developer account + Go-Live are in hand):
 
 - Assume **manual / Seller-Center publishing**. The Skill produces a draft +
   audit for a human to enter, not an API payload to POST.
@@ -330,7 +344,7 @@ hardcoded** — each names a resource whose own `verification` state is in §3.
 | `resolve_model_exists` | a model-scoped op needs an existing `model_id` (never for CREATE); no-variation → `model_id = 0` | `get_model_list` (`item_id`) | `EXECUTION = REVIEW` | `EXECUTION = FAIL` (no model) | `PRIMARY_VERIFIED` (SPD-020) — **KEEP** |
 | `resolve_compliance_applicability` | prohibited / restricted / regulated status | Shopee BR policy (`compliance.md`); `add_item` `error_category_is_block` / `error_forbidden_category` / NCC/BSMI/FDA attribute errors; PH cert via `get_product_certification_rule` (page not in corpus) | `PUBLICATION`/`EXECUTION = REVIEW` | `FAIL` per `compliance.md` | `PRIMARY_PARTIAL` (SPD-010) — **KEEP** |
 | `resolve_contact_diversion_clean` | no contact / external-diversion strings in the assembled payload | payload scan (INTERNAL) | `PUBLICATION = REVIEW` | `PUBLICATION = FAIL` if still present at publish (`CONTENT` stays `PASS` if dropped) | `INTERNAL` — **KEEP** |
-| `resolve_open_platform_br_access` | approved BR developer profile (Registered Business Seller / ISV) + listing-capable app category + completed Go-Live (Production) | Open Platform Console / onboarding (SPD-003/004/005/009) — **not a runtime endpoint**; an operational precondition | `EXECUTION = REVIEW` | `EXECUTION = FAIL` for the target op (fall back to manual publish); **never** a global `FAIL` on "availability" | `PRIMARY_VERIFIED` (§4) — **KEEP, redefined** |
+| `resolve_open_platform_br_access` | approved BR developer profile (Registered Business Seller / ISV) + listing-capable app category + completed Go-Live (Production) | Open Platform Console / onboarding (SPD-003/004/005/009) — **not a runtime endpoint**; an operational precondition | `EXECUTION = REVIEW` | `EXECUTION = FAIL` for the target op (fall back to manual publish); **never** a global `FAIL` on "availability" | `PRIMARY_PARTIAL` (§4 — onboarding flow documented; profile-approval criteria `PRIMARY_NOT_FOUND`) — **KEEP, redefined** |
 | `resolve_content_diagnosis` *(optional, post-publication)* | Shopee's own listing-quality diagnosis for an existing item | `get_item_content_diagnosis_result` — **NOT in the primary corpus**; Phase 02.2 SEARCH_INDEXED name only. `get_item_base_info.deboost` (search-ranking lowered) is a primary-verified proxy. | `QUALITY = REVIEW` | — (never `FAIL`) | `PRIMARY_NOT_FOUND` — **KEEP as optional; use `deboost` in the meantime** |
 
 The same four readiness dimensions absorb every check — **no fifth dimension is

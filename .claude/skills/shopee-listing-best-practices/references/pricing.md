@@ -4,7 +4,7 @@ last_reviewed: 2026-08-28
 phase_02_3_reviewed: 2026-09-03
 phase_02_2_reviewed: 2026-08-30
 volatile: true
-classification: OFFICIAL (fields) — verification SEARCH_INDEXED; all bounds `UNVERIFIED`
+classification: OFFICIAL (fields) — `update_price` + `price_limit` source PRIMARY_VERIFIED (SPD-027/029); the bound values are DYNAMIC
 phase_02_3_note: >-
   PRIMARY (SPD-027 update_price, SPD-029, SPD-011). `POST /api/v2/product/update_price`;
   `item_id` + `price_list[]` (**length 1–50**) `{model_id (0 = no model item),
@@ -18,10 +18,11 @@ phase_02_3_note: >-
   (`error_edit_item_price_for_item_has_model`); locked under promotion;
   `error_seller_under_penalty` blocks edits.
 phase_02_2_note: >-
-  `product/update_price` (`item_id`, `price_list`) corroborated; `price_list`
-  entries carry `model_id` when models exist. `price_limit` bounds and their
-  resolution source remain `UNVERIFIED` (`get_item_limit` scope is disputed —
-  see `api-and-auth.md` §3). See `phase-02.2-report.md` §18.
+  HISTORICAL (superseded by phase_02_3_note above). Phase 02.2 left the
+  `price_limit` resolution source `UNVERIFIED` and the `get_item_limit` scope
+  disputed. Phase 02.3 (SPD-029) confirmed **`get_item_limit.price_limit
+  {min_limit, max_limit}` IS the source** (per shop+category, DYNAMIC values).
+  See `phase-02.2-report.md` §18.
 
 ## 1. Conceptual separation (keep these four apart)
 
@@ -32,17 +33,17 @@ phase_02_2_note: >-
 | **publication requirement** | a price must be present and within the category's bounds to publish | `PUBLICATION_REQUIRED`; unresolved → `REVIEW` |
 | **execution mechanism** | the `UPDATE_PRICE` operation and its prerequisites | `EXECUTION` (per operation) |
 
-## 2. What discovery found (all `SEARCH_INDEXED`, `⚠ verify`)
+## 2. What is known (Phase 02.3 primary — SPD-027, SPD-029)
 
 | Aspect | Finding | Status |
 |---|---|---|
-| Level | model-level when models exist, else item-level | `SEARCH_INDEXED` |
-| Fields | `original_price` and a promo / `current_price`; currency **BRL** | `SEARCH_INDEXED` |
-| Update | `update_price` (+ batch); `update_model` for a model's price | `SEARCH_INDEXED` |
-| Bounds | `get_item_limit.price_limit` (min / max) | values `UNVERIFIED` — `DYNAMIC` |
-| Range display | the item shows a price range when models differ | `SEARCH_INDEXED` |
+| Level | model-level when models exist (`price_list` entry per `model_id`; `0` = no-model); item-level price blocked when the item has models (`error_edit_item_price_for_item_has_model`) | `PRIMARY_VERIFIED` (SPD-027) |
+| Fields | `original_price` (float) and `current_price` (= promo price when `has_promotion`); BR allows **2 decimal places** | `PRIMARY_VERIFIED` (SPD-027/011) |
+| Update | `POST /api/v2/product/update_price`, `price_list[]` 1–50 | `PRIMARY_VERIFIED` (SPD-027) |
+| Bounds | **`get_item_limit.price_limit {min_limit, max_limit}`** — per shop+category | `PRIMARY_VERIFIED` source (SPD-029); values `DYNAMIC` |
+| Range display | the item shows a price range when models differ; `get_item_base_info` omits `price_info` for a multi-model item (use `get_model_list`) | `PRIMARY_VERIFIED` (SPD-011) |
 | Misleading pricing | Shopee BR polices fake "de / por" reference prices | `SEARCH_INDEXED`; specifics `UNVERIFIED` |
-| Cross-variant consistency | no rule found that all models must share a price; kit / pack differences allowed | `UNVERIFIED` |
+| Cross-variant consistency | no rule found that all models must share a price | `PRIMARY_NOT_FOUND` |
 
 ## 3. Do NOT hardcode
 
@@ -51,8 +52,9 @@ phase_02_2_note: >-
 - discount / promotional constraints,
 - promo mechanics.
 
-All remain unresolved. Resolve `price_limit` via `get_item_limit`
-(`resolve_price_bounds`, `references/api-and-auth.md` §5).
+The **values** stay `DYNAMIC` per shop+category. Resolve `price_limit` via
+`get_item_limit` (`resolve_price_bounds`, `references/api-and-auth.md` §0 / §5) —
+never assume a fixed bound.
 
 ## 4. Readiness impact
 

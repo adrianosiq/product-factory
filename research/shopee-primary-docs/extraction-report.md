@@ -61,13 +61,15 @@ All **v2**. Captured 2026-09-01 / 2026-09-03; page "Last Updated" 2026-06…2026
   `Seller In-House System`; ISV → `ERP System`. Both categories appear in the
   "APP types that can call this API" list of `add_item`, `update_item`,
   `update_stock`, `update_price`, `init_tier_variation`, `add_model`,
-  `get_category`, `get_attribute_tree`, `get_brand_list`, `get_item_limit` — and
-  are **not** whitelist-gated.
+  `get_category`, `get_attribute_tree`, `get_brand_list`, `get_item_limit`.
+  **No separate per-category whitelist is documented** for these categories
+  (unlike the SPI apps below) — but absence of a documented whitelist is **not**
+  proof none exists, and the developer profile itself is approval-gated.
 - **Production requires Go-Live review** by Shopee (Product Brief, Redirect URL
   domains, IP whitelist, IT-assets declaration) (SPD-009). **Sandbox** is
   independent and available first (SPD-008).
-- **Whitelist-only** applies to `Swarm ERP`, `Brand Membership`, `Auto Parts
-  Installation` SPI apps (SPD-035) — **not** the listing APIs.
+- **Whitelist-only** is explicitly stated for `Swarm ERP`, `Brand Membership`,
+  `Auto Parts Installation` SPI apps (SPD-035).
 - **`PRIMARY_NOT_FOUND`**: exact developer-profile approval criteria (link
   `open.shopee.com/developer-guide/12` not supplied); whether `register_brand` is
   supported in BR.
@@ -229,9 +231,11 @@ All **v2**. Captured 2026-09-01 / 2026-09-03; page "Last Updated" 2026-06…2026
   `price_info`, `pre_order`, `stock_info_v2`, `gtin_code` ("only TW seller and BR
   local seller"), `weight`, `dimension`, `is_fulfillment_by_shopee`,
   `standardise_tier_variation[]`}.
-- **No-variation / default model**: addressed as **`model_id = 0`**
-  (`update_stock` / `update_price`: "0 for no model item"). Shopee keeps an
-  internal "default model" for such items.
+- **No-variation / default model**: the **`model_id = 0` addressing convention**
+  ("0 for no model item" in `update_stock` / `update_price`) is
+  `PRIMARY_VERIFIED`. That Shopee keeps a fully queryable internal "default
+  model" entity for every such item is `PRIMARY_PARTIAL` — inferred from one
+  FBS-context phrase (`is_fulfillment_by_shopee`: "only has a default model").
 - Promotion locks: `error_cannt_init_tier_in_promotion`,
   `error_cannt_be_no_variation_in_promotion`,
   `error_cannt_change_tier_variation_in_promotion`,
@@ -481,9 +485,11 @@ See `reconciliation-report.md` for the full table. Material corrections:
 6. **Attribute field is `mandatory`** (not `is_mandatory`) in `get_attribute_tree`.
 7. **Brazil host** `https://openplatform.shopee.com.br/api/v2/` is the primary,
    explicitly documented BR Product API base.
-8. **Brazil eligibility** upgraded from `UNRESOLVED` to `PRIMARY_VERIFIED`:
-   available to Registered Business Sellers / ISVs, gated by developer-profile
-   approval + Go-Live review; not whitelist-gated for listing APIs.
+8. **Brazil eligibility** upgraded from `UNRESOLVED` to `PRIMARY_PARTIAL`: BR
+   Product API availability is a **derived** conclusion (BR hosts + BR tax fields
+   + BR developer journey); eligible developer types + Go-Live model documented;
+   developer-profile **approval criteria** `PRIMARY_NOT_FOUND`; no per-category
+   whitelist documented for the listing APIs (absence ≠ proof none exists).
 9. **Sign base string** — primary-verified per API type (Shop/Merchant/Public).
 10. **Token lifetimes** — primary-verified (4h / 30d / 10min / 5min / ≤360d).
 11. **`product_id`** is not a primary parameter — drop the "cross-border alias"
@@ -517,7 +523,7 @@ See `reconciliation-report.md` for the full table. Material corrections:
 
 | # | Domain | Status | Basis |
 |---|---|---|---|
-| 1 | Brazil eligibility / onboarding | **COVERED** | SPD-003/004/005/008/009 (approval + Go-Live model; BR developer types; app-category permissions; not whitelisted for listing APIs). Approval *criteria* not supplied → minor gap. |
+| 1 | Brazil eligibility / onboarding | **PARTIAL** | SPD-003/004/005/008/009/035 (approval + Go-Live model; BR developer types; app-category permissions; no per-category whitelist documented for listing APIs — absence ≠ proof). Product API availability is **derived**, not one explicit sentence; approval *criteria* not supplied. |
 | 2 | Authentication | **COVERED** | SPD-001 (flow, hosts, lifetimes, sign base string per API type, token endpoints). |
 | 3 | Add Item | **COVERED** | SPD-010 (required/optional fields, response, full error family, permissions). `PRIMARY_PARTIAL` on some optional-field enums. |
 | 4 | Get Item | **COVERED** | SPD-011 (`item_id_list ≤ 50`, `item_status` enum, `stock_info_v2`, `price_info` model rule, `ssp_id`, flags). |
