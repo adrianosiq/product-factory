@@ -1,9 +1,22 @@
 # Categories — discover → resolve → validate
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: workflow INTERNAL; underlying endpoints OFFICIAL (verification SEARCH_INDEXED, `⚠ verify`)
+phase_02_3_note: >-
+  PRIMARY (SPD-021 get_category, SPD-022 category_recommend, SPD-010).
+  `get_category` (`GET`, param `language` only — **returns the whole tree**, no
+  `category_id`) → `category_list[{category_id, parent_category_id,
+  original_category_name, display_category_name, has_children}]`. **Leaf =
+  `has_children: false`** (PRIMARY_VERIFIED mechanism; an explicit "must list
+  under a leaf" sentence is `PRIMARY_PARTIAL`). No `listing_allowed` flag —
+  restriction surfaces at `add_item` as `error_category_is_block` "Category is
+  restricted" / `error_forbidden_category` / `error_invalid_category` "L1 and L2
+  do not match". `category_recommend` (`GET`, `item_name` + optional
+  `product_cover_image` id) → ranked `category_id[]` + a `ds_cat_rcmd_id` for
+  `add_item`.
 phase_02_2_note: >-
   `product/get_category` (param `language`) and `product/category_recommend`
   (param `item_name`) corroborated across two independent SDKs — `SEARCH_INDEXED`,

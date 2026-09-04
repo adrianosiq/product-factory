@@ -1,9 +1,26 @@
 # Brand & product identifiers (GTIN / EAN / UPC / ISBN)
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: OFFICIAL (existence of the requirement) — verification SEARCH_INDEXED; exact scope `⚠ verify`
+phase_02_3_note: >-
+  PRIMARY (SPD-025 get_brand_list, SPD-026 register_brand, SPD-010, SPD-029).
+  `get_brand_list` is per **leaf category**; params `offset` / `page_size`
+  (max 100) / `category_id` / `status` (1 normal, 2 pending) / `language`;
+  returns `brand_list[{brand_id, original_brand_name, display_brand_name}]` +
+  `is_mandatory` for the brand attribute. **`add_item` ALWAYS requires the
+  `brand` object** (`brand_id` True + `original_brand_name` True — "No Brand if
+  not brand"); **"No Brand" ⇒ `brand_id: 0`** (`error_invalid_brand` "Brand ID
+  value should be '0'"). `register_brand` is a real API, **QC-reviewed**
+  (`error_busi_pending_qc`), blacklist rules; `unsupport_region_for_register_brand`
+  for some markets (BR support `PRIMARY_NOT_FOUND`). **GTIN — PRIMARY_VERIFIED**:
+  `gtin_code` string; **`"00"` = "Item without GTIN"** (no `EMPTY_GTIN_REASON`
+  analogue — the literal `"00"` IS the mechanism); validation from
+  `get_item_limit.gtin_limit.gtin_validation_rule` ∈ `Mandatory` / `Flexible`
+  (GTIN or "00") / `Optional`; **model-level** (item-level for default-model
+  items); BR + TW local sellers.
 phase_02_2_note: >-
   `get_brand_list` is a **per-`category_id`** resource — brand requiredness is
   category-linked, which supports modelling brand as CONDITIONAL_REQUIRED /

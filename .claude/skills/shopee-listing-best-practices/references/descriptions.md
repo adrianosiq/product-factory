@@ -1,8 +1,17 @@
 # Descriptions
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 volatile: true
 classification: OFFICIAL (policy) — verification SEARCH_INDEXED; length limit DYNAMIC and NOT locked
+phase_02_3_note: >-
+  PRIMARY (SPD-029, SPD-010). **`description` length limit is
+  `get_item_limit.item_description_length_limit {min,max}`** (DYNAMIC; doc sample
+  min 10 / max 2000) — the ≈5,000 value is REJECTED. `extended_description` is a
+  separate object bounded by `get_item_limit.extended_description_limit` and is
+  **whitelist sellers only** (`description_type = extended`, else `normal`).
+  Hashtags in the description ≤ 18 (`error_desc_hash_tag_over_limit`).
+  `error_desc_length_min_limit` on violation.
 
 ## 1. What discovery found (all `SEARCH_INDEXED`, `⚠ verify`)
 

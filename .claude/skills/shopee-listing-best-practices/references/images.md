@@ -1,8 +1,18 @@
 # Images
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 volatile: true
 classification: mixed — Shopee specs OFFICIAL (verification SEARCH_INDEXED, `⚠ verify`); numeric values NOT locked
+phase_02_3_note: >-
+  PRIMARY (SPD-029, SPD-010). Image **count** = `get_item_limit.item_image_count_limit
+  {min,max}` (DYNAMIC; doc sample 1–9). `add_item.image_ratio`: `"1:1"` (default)
+  or `"3:4"` — **3:4 is whitelisted sellers only**. `promotion_images`: one
+  image, ratio **must be 3:4**. Upload via `v2.media_space.upload_image`
+  (page NOT in the corpus) → persist `image_id`. Pixel min/max, byte cap, file
+  types, cover-photo moderation rules are `PRIMARY_NOT_FOUND` (media_space /
+  seller-education pages not supplied) — keep A/B layers `⚠ verify`. Layer D
+  Product Identity Guard is INTERNAL, unchanged.
 
 Keep four layers separate. Do not let a creative preset be read as a Shopee rule,
 and do not let a provisional number be read as a locked constant.

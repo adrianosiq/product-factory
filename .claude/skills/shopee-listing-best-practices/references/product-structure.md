@@ -1,9 +1,23 @@
 # Product / listing structure — Shop / Item / Tier Variation / Model
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: OFFICIAL (structure) — verification SEARCH_INDEXED; every API-contract detail `⚠ verify`
+phase_02_3_note: >-
+  PRIMARY (SPD-010, SPD-011, SPD-015, SPD-020). Entity spine Shop → Item → Tier
+  Variation → Model is **PRIMARY_VERIFIED**. `add_item` returns `item_id`
+  (int64). `get_item_base_info` takes **`item_id_list` limit [0,50]** — no
+  `product_id` request parameter exists in the primary corpus (drop the
+  cross-border-alias worry). NEW: `get_item_base_info` returns **`ssp_id` =
+  "Shopee Standard Product"** id — a catalogue-like node (relates to gap G6) —
+  and `tag.kit` (bool). **`model_id = 0` = "no model item"**; Shopee keeps an
+  internal **default model** for no-variation items (no separate hidden id is
+  exposed). `item_status` ∈ `NORMAL` / `BANNED` / `UNLIST` / `SELLER_DELETE` /
+  `SHOPEE_DELETE` / `REVIEWING`. Persist `shop_id` / `item_id` / `model_id` /
+  `brand_id` / `image_id` / `video_upload_id`; write internal SKU into `item_sku`
+  / `model_sku` (≤ 100 chars).
 phase_02_2_note: >-
   Entity spine Shop → Item → Tier Variation → Model is a corroborated API
   contract candidate (`SEARCH_INDEXED` · MEDIUM · MULTI_SOURCE; non-primary — not

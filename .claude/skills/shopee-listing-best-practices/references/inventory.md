@@ -1,9 +1,23 @@
 # Inventory — CONSERVATIVE (major discovery gap)
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: OFFICIAL (level) — verification SEARCH_INDEXED; the BR stock/warehouse model is UNRESOLVED
+phase_02_3_note: >-
+  PRIMARY (SPD-028 update_stock, SPD-015, SPD-011, SPD-020). `POST /api/v2/product/update_stock`;
+  one `item_id` per call; `stock_list[]` (**length 1–50**) `{model_id (0 = no
+  model item), seller_stock:[{location_id (optional), stock}]}`. **Writes only
+  `seller_stock`; the value is ABSOLUTE** ("new stock info"); `normal_stock` was
+  offlined 2022-10-31. **Multi-warehouse IS supported**: `location_id` comes from
+  **`v2.shop.get_warehouse_detail`** (page NOT in corpus); omit it when the shop
+  has no warehouse; **cannot mix** stock structures (all with `location_id` or
+  all without). WMS shops blocked (`error_wms_shop_block_upate_stock`); FBS/B2C:
+  normal stock must = 0. Reads: `stock_info_v2 {summary_info{total_reserved_stock,
+  total_available_stock}, seller_stock[{location_id, stock, if_saleable}],
+  shopee_stock[...], advance_stock{...}}`. Do **not** import Multi Origem — this
+  is Shopee's own model.
 phase_02_2_note: >-
   `product/update_stock` (`item_id`, `stock_list`) corroborated; `stock_list`
   entries carry `model_id` when models exist. No location/warehouse dimension was

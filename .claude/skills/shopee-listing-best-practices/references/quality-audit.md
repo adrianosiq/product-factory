@@ -1,6 +1,19 @@
 # Quality audit & readiness (PROVISIONAL — mirrors the Product Factory contract)
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
+phase_02_3_note: >-
+  PRIMARY (Phase 02.3). `PUBLICATION_STATUS` hard checks now have primary
+  sources: resolved `get_item_limit` bounds (title / description / image / price /
+  stock / DTS), `get_attribute_tree.mandatory` attributes, the `add_item` brand
+  object, `gtin_validation_rule`, leaf `has_children`, ≥ 1 `logistic_info`
+  channel + `weight`. `EXECUTION_STATUS`: app-category permission, token validity
+  (4h/30d), `item_status` ∉ {`BANNED`, `SELLER_DELETE`, `SHOPEE_DELETE`},
+  warehouse capability, Go-Live approval, `error_seller_under_penalty`.
+  **No `/performance` and no content-diagnosis / violation endpoint in the
+  primary corpus** — `QUALITY_STATUS` stays driven by our own checks +
+  `get_recommend_attribute` + the `deboost` flag. Four dimensions unchanged; no
+  fifth.
 phase_02_2_reviewed: 2026-08-30
 
 Final gate. Produces the structured output in `SKILL.md` §11. No publishing.

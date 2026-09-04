@@ -1,15 +1,18 @@
 # Official sources — registry & verification quality
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 volatile: true
 fetch_method_note: >-
-  As of last_reviewed, NO Shopee source in this file has been read LIVE.
-  `open.shopee.com` (Open Platform API portal) was unreachable during Phase 01
-  discovery. `seller.shopee.com.br/edu`, `help.shopee.com.br` and
-  `ads.shopee.com.br/learn` render client-side and return only a page title to a
-  fetch — their bodies are known only from search snippets. Every row below is
-  therefore `SEARCH_INDEXED` or `UNVERIFIED`. A `SEARCH_INDEXED` row is not
-  `LIVE` and may be stale or wrong; confirm before locking any rule.
+  **Phase 02.3 (2026-09-03): 35 Shopee Open Platform pages WERE read LIVE** —
+  see the "PRIMARY source registry" section below (SPD-001…SPD-035, stored at
+  `docs/marketplaces/shopee/open-platform/`). The `S1…S17` rows further down are
+  the older `SEARCH_INDEXED` / `UNVERIFIED` reconstruction and are **superseded**
+  wherever a PRIMARY row covers the same fact. `seller.shopee.com.br/edu`,
+  `help.shopee.com.br` and `ads.shopee.com.br/learn` (S2–S4) still render
+  client-side — image pixel rules, prohibited-products policy and penalty
+  mechanics remain `SEARCH_INDEXED`. The `LIVE` cell in the table below now
+  reads "SPD-* — read 2026-09-03" for the covered surfaces.
 
 ## How to read this file
 
@@ -20,7 +23,7 @@ fetch_method_note: >-
 
   | Value | Meaning |
   |---|---|
-  | `LIVE` | The primary page was read directly this cycle. **None yet.** |
+  | `LIVE` | The primary page was read directly. `SPD-001`…`SPD-029` (Phase 02.3, 2026-09-03). |
   | `SEARCH_INDEXED` | Reconstructed from search-engine snippets, third-party integrator docs, or community SDK source. Plausible, not confirmed. |
   | `UNVERIFIED` | Not corroborated at all — a schema/limit/behaviour only guessed at, or an open question. |
 
@@ -32,6 +35,32 @@ fetch_method_note: >-
 - Community SDK endpoint names are **not** a canonical API contract. If a v2
   endpoint name comes only from an SDK or an integrator blog, its schema is
   `UNVERIFIED`.
+
+## PRIMARY source registry (Phase 02.3 — 2026-09-03)
+
+35 official **Shopee Open Platform** pages, captured by the maintainer as
+browser print-to-PDF, provenance-verified, secret-reviewed, and **read** on
+2026-09-03. Stored at `docs/marketplaces/shopee/open-platform/`; full registry
++ per-fact `SPD` citations in `research/shopee-primary-docs/`
+(`evidence-registry.md`, `claim-registry.md`, `extraction-report.md`,
+`reconciliation-report.md`).
+
+| id range | Surface | Verification | Covers |
+|---|---|---|---|
+| `SPD-001` | Developer Guide — Authorization & Authentication | **LIVE / PRIMARY_VERIFIED** | auth flow, hosts (incl. BR `openplatform.shopee.com.br`), sign base string per API type, token lifetimes (4h / 30d / 10min / 5min / ≤360d) |
+| `SPD-002`…`SPD-009`, `SPD-035` | Developer Guide — BR developer journey + BR SPI App guide | **LIVE / PRIMARY_VERIFIED** | Brazil eligibility: dev-profile approval + Go-Live review; BR developer types (Registered Business Seller / ISV); app-category permission model; Sandbox; whitelist scope |
+| `SPD-010`…`SPD-014` | API Reference — `product` item lifecycle | **LIVE / PRIMARY_VERIFIED** | `add_item` (required/optional fields, error family), `get_item_base_info` (`item_id_list` ≤ 50, `item_status` enum, `stock_info_v2`, `ssp_id`), `update_item` / `unlist_item` / `delete_item` |
+| `SPD-015`…`SPD-020` | API Reference — `product` variations / models | **LIVE / PRIMARY_VERIFIED** | max 2 tiers, `standardise_tier_variation`, `model_id = 0` = no-model, `model_status`, model/option counts |
+| `SPD-021`…`SPD-024` | API Reference — `get_category` / `category_recommend` / `get_attribute_tree` / `get_recommend_attribute` | **LIVE / PRIMARY_VERIFIED** | tree + `has_children` (leaf), `mandatory` attribute flag, `input_type` enum |
+| `SPD-025`, `SPD-026` | API Reference — `get_brand_list` / `register_brand` | **LIVE / PRIMARY_VERIFIED** | per-leaf brands, `status` 1/2, brand object required in `add_item`, `brand_id: 0` = No Brand, QC-reviewed registration |
+| `SPD-027`, `SPD-028`, `SPD-029` | API Reference — `update_price` / `update_stock` / `get_item_limit` | **LIVE / PRIMARY_VERIFIED** | batch 1–50, `get_item_limit` = the dynamic source of title/desc/image/price/stock/tier/DTS limits + weight/dimension/size-chart/GTIN requiredness; `gtin_validation_rule` Mandatory/Flexible/Optional; `seller_stock` absolute write |
+| `SPD-030`…`SPD-034` | Developer Guide — webhooks / sensitive-data / FAQ / references / ticket best-practices | `PRIMARY` (no listing-contract claims) | — |
+
+`PRIMARY_NOT_FOUND` in the corpus (need acquisition): `v2.logistics.get_channel_list`,
+`v2.logistics.get_address(_list)`, `v2.shop.get_warehouse_detail`,
+`v2.media_space.upload_image` / `upload_video`, `v2.product.search_attribute_value_list`,
+a dedicated `get_dts_limit` page, `update_item` full field list, penalty /
+content-diagnosis / violation APIs.
 
 ## Source registry
 

@@ -8,17 +8,21 @@ description: >-
   expectation and delivered product. Produces a listing draft plus a structured
   quality audit. Never publishes.
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 phase_02_2_reviewed: 2026-08-30
 review_owner: product-create team
-status: PROVISIONAL SCAFFOLD — Phase 02.1 (API contract partially verified, Phase 02.2)
+status: PROVISIONAL — Phase 02.3 primary extraction done; listing contract largely PRIMARY_VERIFIED; logistics service still missing; Phase 02.4 (rule locking) not started
 scaffold_notice: >-
-  This Skill was scaffolded from Phase 01 discovery, which had ZERO live Shopee
-  sources. No readable primary Shopee Open Platform API contract has been
-  verified. Every marketplace rule here is provisional and carries a verification
-  quality (LIVE / SEARCH_INDEXED / UNVERIFIED); most Shopee-specific rules are
-  SEARCH_INDEXED or UNVERIFIED and are marked `⚠ verify`. Numeric limits are NOT
-  locked. Do not treat this Skill as a finished marketplace integration. See §13
-  "Known discovery gaps".
+  Scaffolded from Phase 01 discovery. Phase 02.3 (2026-09-03) read 35 official
+  Shopee Open Platform PDFs (`docs/marketplaces/shopee/open-platform/`;
+  reconciliation in `research/shopee-primary-docs/`): the `v2.product.*` + `auth`
+  listing contract is now largely PRIMARY_VERIFIED / LIVE — see the per-file
+  `phase_02_3_note` blocks and `references/api-and-auth.md` §0, which supersede
+  older `SEARCH_INDEXED` prose. Still non-primary and marked `⚠ verify`: the
+  logistics service, media_space upload rules, penalty/content-diagnosis APIs,
+  `update_item` full field list, image pixel/byte/type rules. Numeric limits are
+  DYNAMIC (via `get_item_limit`) — not hardcoded. Phase 02.4 (rule locking) has
+  not run. See §13.
 ---
 
 # Shopee (Brasil) — Listing Best Practices — PROVISIONAL SCAFFOLD
@@ -35,16 +39,21 @@ distinct at all times:
 | **PROVISIONAL** | Reconstructed from search snippets, third-party integrators or community SDKs (`SEARCH_INDEXED`). Plausible, not confirmed. | rule tag + `verification: SEARCH_INDEXED` + `⚠ verify` |
 | **UNVERIFIED** | Not corroborated at all — a schema, limit or behaviour we have only guessed at, or an open question. | `UNVERIFIED` tag + `⚠ verify`; usually also a `dynamic_checks_required` entry |
 
-**As of `last_reviewed` there are no `LIVE` Shopee sources.** `open.shopee.com`
-(the Open Platform API portal) was unreachable during discovery; the Shopee BR
-seller-education and help centres render client-side and returned only page
-titles. Therefore:
+**Phase 02.3 (2026-09-03): 35 official Shopee Open Platform PDFs were read**
+(`docs/marketplaces/shopee/open-platform/`; extraction + reconciliation in
+`research/shopee-primary-docs/`). The `v2.product.*` + `auth` **listing
+contract** is now largely `PRIMARY_VERIFIED` / `LIVE` — the per-file
+`phase_02_3_note` blocks and `api-and-auth.md` §0 carry the authoritative facts
+and supersede older `SEARCH_INDEXED` prose. Still non-primary: the `logistics`
+service, `media_space` upload pages, penalty/content-diagnosis APIs, `update_item`
+full field list. Therefore:
 
-- Every Shopee endpoint name, request field, payload shape and numeric limit is
-  **`SEARCH_INDEXED` at best, `UNVERIFIED` for all detail.**
+- For anything **not** covered by a `phase_02_3_note` / `api-and-auth.md` §0
+  primary fact, treat endpoint names / fields / limits as `SEARCH_INDEXED` at
+  best, `UNVERIFIED` for detail.
 - A discovery hypothesis does **not** become `OFFICIAL` because it looked
-  plausible in Phase 01. Community SDKs and third-party integration guides are
-  **not** primary API sources and never upgrade a rule to `OFFICIAL`.
+  plausible. Community SDKs and third-party integration guides are **not**
+  primary API sources and never upgrade a rule.
 - Do **not** copy Mercado Livre rules into Shopee (§6.4 lists the concepts that
   are explicitly *not* imported).
 
@@ -473,19 +482,27 @@ fetch-tool level and the portal is a client-rendered SPA — **nothing was read
 + two Shopee BR seller-education article titles raised the v2 `product` endpoint
 *names / paths / key params* to "corroborated `SEARCH_INDEXED`, MEDIUM" and
 corrected several details. Full analysis + change-classification:
-`research/shopee-api-contract/phase-02.2-report.md`. Decision:
+`research/shopee-api-contract/phase-02.2-report.md`. Phase 02.2 decision:
 **`API CONTRACT PARTIALLY VERIFIED — USER PRIMARY ARTIFACT REQUIRED`.**
 
-| # | Gap | Consequence | Resolve in |
+**Phase 02.3 (2026-09-03) read 35 official Shopee Open Platform PDFs**
+(`docs/marketplaces/shopee/open-platform/`; registry + reconciliation in
+`research/shopee-primary-docs/`). Most of the listing contract is now
+`PRIMARY_VERIFIED`. Phase 02.3 decision:
+**`PRIMARY EVIDENCE EXTRACTION COMPLETE — ADDITIONAL PRIMARY ARTIFACTS REQUIRED`**
+(logistics service). Gap status below is updated.
+
+| # | Gap | Phase 02.3 status | Resolve in |
 |---|---|---|---|
-| **G1** | No readable primary Shopee Open Platform API contract. Portal + archive are tool-blocked and the docs are a SPA. Endpoint *names/paths* are a corroborated contract candidate (`SEARCH_INDEXED` · MEDIUM · MULTI_SOURCE, non-primary — not `CONFIRMED`); every **schema** and **error contract** is still `UNVERIFIED`. | `PUBLICATION_STATUS` hard checks cannot be trusted yet. | Phase 02.3 (Primary Documentation Ingestion) |
-| **G2** | Brazil Open Platform **existence** now has a MULTI_SOURCE signal, **all non-primary**: a `openplatform.shopee.com.br` host string in one SDK's region config, a dedicated `br` API module, and two Shopee BR seller-education article titles (3445, 27314) about applying for / integrating with the Open Platform. Brazil **eligibility** — who may register a partner app, which API function-groups are granted, sandbox/production approval — is **`UNRESOLVED`**; the evidence *leans* approval-gated but is **not** recorded as `CONFIRMED_RESTRICTED`. | The `EXECUTION` layer and any publish pipeline still depend on it. Output stays publish-agnostic; `resolve_open_platform_br_access` stays `REVIEW`, never a global `FAIL`. | Phase 02.3 |
-| **G3** | Core numeric limits (title ≈255/256, description ≈5,000, images 1–9 / dims, tier/option/model caps, price/stock bounds, days-to-ship) are only MEDIUM/LOW confidence — **and their resolution *source* is now in doubt**: `get_item_limit` may be a shop listing-**quota** call, not a per-field size-limit resource; `get_dts_limit` is a `logistics` (not `product`) resource. | None is locked. All stay `DYNAMIC` + provisional; the checks keep their names but cite "resolution source `UNVERIFIED`" (`api-and-auth.md` §5). The "≈" numbers live only in prose. | Phase 02.4 |
-| **G4** | BR stock / warehouse model unresolved — single seller pool vs multi-warehouse `location_id`; absolute vs incremental stock writes; concurrency. `update_stock(item_id, stock_list)` shape corroborated; no location dimension observed (absence ≠ proof). | `inventory.md` stays conservative; Multi Origem is **not** imported. | Phase 02.5 |
-| **G5** | No dedicated pre-publication validator found (searched a 380-endpoint SDK + a "100% coverage" SDK — no `validate` / `dry-run` / `precheck` in `v2.product.*`; still not a primary-confirmed negative). A **post-creation** content-diagnosis API does exist (`get_item_content_diagnosis_result`) → feeds `QUALITY_STATUS` only. | `PUBLICATION_STATUS` leans on up-front fetches + local payload checks; the `add_item` response is the authoritative gate (its shape `UNVERIFIED`). | Phase 02.3 / 02.5 |
-| **G6** | Catalogue / "produto" grouping concept unresolved — no evidence of a shared product page / Buy Box, but not confirmed absent. | Every listing treated as standalone; no catalogue-association logic built; no `catalog.md` created. | Phase 02.10 |
-| **G7** | Penalty-point mechanics (weekly cadence, 60-day validity, threshold values) and any BR violations / account-health API are unverified. | Enforcement treated as Seller-Center-only and separate from ProductMaster truth. | Phase 02.8 |
-| **G8** | Listing-video constraints (duration / size / aspect) vs Shopee Video / Shopee Live constraints not separated with confidence. | Only state Shopee Video / Live numbers with an explicit `scope`; listing-video specs marked unknown. | Phase 02.7 |
+| **G1** | primary API contract | **RESOLVED (mostly)** — the `v2.product.*` + `auth` contract (endpoints, params, required fields, error families, `item_status` enum, sign base string, token lifetimes) is `PRIMARY_VERIFIED` from SPD-001…SPD-029. Still `PRIMARY_NOT_FOUND`: `update_item` full field list, `search_attribute_value_list`, `get_recommend_attribute` full schema. | Phase 02.4 |
+| **G2** | Brazil eligibility | **RESOLVED** — BR Product/listing API **is available** to `Registered Business Seller` / `Third-party Partner (ISV)` developers; gated by developer-profile approval + Go-Live review (Sandbox first); **not** whitelisted for listing APIs (whitelist only for Swarm ERP / Brand Membership / Auto Parts SPI apps). `resolve_open_platform_br_access` = an account/app-approval readiness check (`api-and-auth.md` §4). Still `PRIMARY_NOT_FOUND`: the exact approval criteria. | done |
+| **G3** | numeric limits + their source | **RESOLVED (source)** — `get_item_limit` **is** the dynamic source of title / description / image / price / stock / tier / DTS limits + weight/dimension/size-chart/GTIN requiredness (`response` object; optional `category_id`). Phase 02.2's "just a quota" is rejected; `item_count_limit` is the quota field. Values stay `DYNAMIC` (resolve at runtime). The ≈255/≈5000/1–9 provisional numbers are **rejected** (doc samples: name 5–100, desc 10–2000, images 1–9). | Phase 02.4 locks static vs dynamic |
+| **G4** | BR stock / warehouse | **RESOLVED (structure)** — `update_stock` writes `seller_stock` **absolute**; multi-warehouse **is** supported via `location_id` from `v2.shop.get_warehouse_detail` (page not supplied); can't mix stock structures; WMS shops blocked; FBS/B2C normal stock = 0. Keep `inventory.md` model. Still needs the `get_warehouse_detail` page. | Phase 02.4 / acquisition list |
+| **G5** | pre-publication validator | **`NO_DEDICATED_VALIDATOR_FOUND_IN_PRIMARY_CORPUS`** — no `validate` / `precheck` / `dry-run` / content-diagnosis / violation endpoint in the 35 PDFs. The `add_item` / `update_item` response + a large enumerated **business error-code set** (`PRIMARY_VERIFIED`) is the gate. Not asserting absence. | Phase 02.4 |
+| **G6** | catalogue / "produto" grouping | **PARTIAL** — `get_item_base_info` returns **`ssp_id` = "Shopee Standard Product"**, a catalogue-like node. No Buy-Box evidence. Still: treat every listing standalone; note SSP for a later pass. | Phase 02.10 |
+| **G7** | penalty / enforcement | **PARTIAL** — `error_seller_under_penalty` blocks price/stock edits; `get_item_base_info.deboost` = "search ranking lowered". No penalty-points API page supplied. | Phase 02.8 |
+| **G8** | listing video vs Shopee Video/Live | **PARTIAL** — `add_item.video_upload_id` (one per item); read returns `video_info{video_url, thumbnail_url, duration}`. Duration/aspect/size `PRIMARY_NOT_FOUND` (media_space page not supplied). | Phase 02.7 |
+| **G9** *(new)* | **logistics service** | **`LOGISTICS PRIMARY DOCUMENTATION MISSING`** — `v2.logistics.get_channel_list`, `get_address(_list)`, `v2.shop.get_warehouse_detail`, `v2.media_space.upload_image/upload_video` pages were not among the 35 artifacts. `add_item.logistic_info` field shape is known; the service endpoints are not. | Phase 02.3 acquisition list, then 02.4 |
 
 ## Sources
 

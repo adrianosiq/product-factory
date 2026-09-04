@@ -1,9 +1,22 @@
 # Pricing
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: OFFICIAL (fields) — verification SEARCH_INDEXED; all bounds `UNVERIFIED`
+phase_02_3_note: >-
+  PRIMARY (SPD-027 update_price, SPD-029, SPD-011). `POST /api/v2/product/update_price`;
+  `item_id` + `price_list[]` (**length 1–50**) `{model_id (0 = no model item),
+  original_price float}`. **Price bounds are `get_item_limit.price_limit
+  {min_limit, max_limit}`** (per shop+category, DYNAMIC) — `error_price_exceed_min_limit`
+  / `error_price_exceed_max_limit` / `error_price_out_of_range`. **BR (+ SG/MY/
+  MX/PL/ES/AR): two decimal places allowed**; other regions integer only.
+  `original_price` vs `current_price` (= promo price when `has_promotion`);
+  `get_item_base_info` omits `price_info` when the item has models (use
+  `get_model_list`). Can't edit item price directly when it has models
+  (`error_edit_item_price_for_item_has_model`); locked under promotion;
+  `error_seller_under_penalty` blocks edits.
 phase_02_2_note: >-
   `product/update_price` (`item_id`, `price_list`) corroborated; `price_list`
   entries carry `model_id` when models exist. `price_limit` bounds and their

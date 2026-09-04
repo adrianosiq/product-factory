@@ -1,9 +1,23 @@
 # Attributes — product fact vs Shopee category requirement
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: OFFICIAL (model) — verification SEARCH_INDEXED; value/unit semantics `⚠ verify`
+phase_02_3_note: >-
+  PRIMARY (SPD-023 get_attribute_tree). `GET /api/v2/product/get_attribute_tree`,
+  request `category_id_list` (**max 20**) + `language` (BR: `pt-BR` / `en`).
+  **The requiredness field is `mandatory` (bool)** — CORRECTS the `is_mandatory`
+  guess (that name is `add_item` prose / `get_brand_list`). It is a **static
+  per-category boolean** — no conditional-requiredness mechanism. `input_type`:
+  SINGLE_DROP_DOWN=1, SINGLE_COMBO_BOX=2, FREE_TEXT_FILED=3, MULTI_DROP_DOWN=4,
+  MULTI_COMBO_BOX=5. `format_type`: NORMAL=1, QUANTITATIVE_WITH_UNIT=2. Also
+  `input_validation_type` (0-4), `date_format_type` (0-1), `attribute_unit_list`,
+  `max_value_count`, `is_oem`, `support_search_value` (→ `search_attribute_value_list`,
+  page not in corpus), `child_attribute_list` (recursive). `add_item`: for
+  custom values set `value_id = 0` + `original_value_name`. Recommended (non-
+  mandatory) attributes: `get_recommend_attribute` → QUALITY only.
 phase_02_2_note: >-
   Resource name corrected `get_attributes` → `get_attribute_tree`; recommended
   set has its own resource `get_recommend_attribute`. Field names remain

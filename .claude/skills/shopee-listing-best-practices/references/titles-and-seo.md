@@ -1,8 +1,18 @@
 # Titles & SEO
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 volatile: true
 classification: mixed — see per-rule tags; title length is DYNAMIC and NOT locked
+phase_02_3_note: >-
+  PRIMARY (SPD-029 get_item_limit, SPD-010 add_item). Title = `item_name`.
+  **Length limit is `get_item_limit.item_name_length_limit {min_limit,
+  max_limit}`** — per shop+category, DYNAMIC. The ≈255/256 value is REJECTED
+  (doc sample is min 5 / max 100). Primary errors: `error_title_exceeds_max_length`,
+  `error_item_name_is_too_short`, `error_title_character_forbidden`,
+  `error_name_length_limit`, `error_item_name_empty`. SEO/ranking claims stay
+  EXPERIMENTAL (not in the corpus); `get_item_base_info.deboost` is a real
+  "search ranking lowered" flag. See `research/shopee-primary-docs/`.
 
 ## 1. Title — four separate layers (keep them apart)
 

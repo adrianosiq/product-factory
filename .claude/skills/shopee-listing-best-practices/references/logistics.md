@@ -1,9 +1,25 @@
 # Logistics — placeholders to resolve
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: OFFICIAL (fields exist) — verification SEARCH_INDEXED; requirements & limits `UNVERIFIED`
+phase_02_3_note: >-
+  PRIMARY (SPD-029 get_item_limit, SPD-010 add_item). **DTS + weight + dimension
+  + size-chart requiredness ARE in `get_item_limit`** — CORRECTS Phase 02.2's
+  "logistics service, not get_item_limit": `days_to_ship_limit {min, max,
+  non_pre_order_days_to_ship}` (category), `weight_limit {weight_mandatory}`,
+  `dimension_limit {dimension_mandatory}`, `size_chart_limit {size_chart_mandatory,
+  support_image_size_chart, support_template_size_chart}`. `add_item`:
+  `weight` (KG, required), `dimension {package_length/width/height}` cm,
+  `logistic_info[{logistic_id (req), enabled (req), is_free, size_id (when
+  fee_type = SIZE_SELECTION), shipping_fee (when fee_type = CUSTOM_PRICE)}]`,
+  `pre_order {is_pre_order, days_to_ship}`, `condition` NEW/USED. **Still
+  MISSING (`PRIMARY_NOT_FOUND` — pages not supplied):** `v2.logistics.get_channel_list`,
+  `v2.logistics.get_address(_list)`, `v2.shop.get_warehouse_detail`, a dedicated
+  `get_dts_limit` page. `error_category_dts` / `error_param_dts_exceeds_max_limit`
+  / `error_param_category_not_support_pre_order` on violation.
 phase_02_2_note: >-
   Days-to-ship / handling-time limits live in a `logistics` service, not the
   `product` service — Phase 02.1's `get_dts_limit` under `product` is corrected.

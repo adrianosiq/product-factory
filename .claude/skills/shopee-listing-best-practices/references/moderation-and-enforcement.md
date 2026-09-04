@@ -1,9 +1,20 @@
 # Moderation & enforcement — post-publication, separate from ProductMaster truth
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: OFFICIAL (existence) — verification SEARCH_INDEXED; mechanics & API `⚠ verify` / `UNVERIFIED`
+phase_02_3_note: >-
+  PRIMARY (SPD-011 get_item_base_info). **`item_status` enum (definitive):
+  `NORMAL`, `BANNED`, `UNLIST`, `SELLER_DELETE`, `SHOPEE_DELETE`, `REVIEWING`**
+  — CORRECTS the `DELETED` guess. `get_item_base_info` also returns `deboost`
+  (bool — "search ranking is lowered"). `error_seller_under_penalty` ("The shop
+  is under penalty") blocks price/stock edits (SPD-027/028). **`get_item_violation_info`
+  and content-diagnosis endpoints are NOT in the 35-PDF primary corpus** — the
+  Phase 02.2 SEARCH_INDEXED names remain unverified; do not rely on them. No
+  penalty-points API page was supplied. Enforcement state stays separate from
+  ProductMaster truth (unchanged).
 phase_02_2_note: >-
   Per-item violation and content-diagnosis method names now exist
   (`get_item_violation_info`, `get_item_content_diagnosis_result`,

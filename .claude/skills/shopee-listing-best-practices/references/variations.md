@@ -1,9 +1,24 @@
 # Variations — Tier Variation & Model (combination / matrix)
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 phase_02_2_reviewed: 2026-08-30
 volatile: true
 classification: OFFICIAL (pattern) — verification SEARCH_INDEXED; ALL numeric caps `UNVERIFIED` / `⚠ verify`
+phase_02_3_note: >-
+  PRIMARY (SPD-015 init_tier_variation, SPD-017 add_model, SPD-020 get_model_list,
+  SPD-029). **Max 2 tiers — PRIMARY_VERIFIED** (`error_param` "The level of
+  tier-variation over 2"). The old `tier_variation` request structure is
+  **deprecated (2025-09-12)** → use `standardise_tier_variation`
+  (`variation_id`, `variation_name`, `variation_group_id`,
+  `variation_option_list[{variation_option_id, variation_option_name, image_id}]`).
+  **`model_id = 0` = "no model item"**; Shopee keeps an internal **default
+  model** for no-variation items. Counts: model list per call ≤ 50; total models
+  per item `< 20 (50 for TW)` (PRIMARY_CONFLICT with "at most 50"); options per
+  tier ≤ 20; combinations ≤ 50; `model_sku` ≤ 100 chars; tier/option **name**
+  length from `get_item_limit`. `model_status` ∈ `MODEL_NORMAL` /
+  `MODEL_UNAVAILABLE` (whitelist to set). Structure change LOCKED under
+  promotion. FBS item/model not editable; CNSC shop cannot change tier structure.
 phase_02_2_note: >-
   Method names `init_tier_variation` (`item_id`, `tier_variation`, `model`),
   `add_model` (`item_id`, `model_list` → `model_id`s), `update_model`,
