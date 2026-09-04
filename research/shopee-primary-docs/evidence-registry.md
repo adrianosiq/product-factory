@@ -13,10 +13,12 @@ Platform browser print-to-PDF exports (provenance demonstrable from each PDF's
 completion** — `LOGISTICS PRIMARY DOCUMENTATION MISSING` (no `logistics`-service
 page was supplied). Artifact safety and P0 coverage are separate dimensions.
 
-**This registration is intake metadata only** — no claim in `claim-registry.md`
-has been promoted (that is the resumed Phase 02.3 extraction/reconciliation
-pass). "Supports" lists the claims each artifact is *expected to bear on*, not
-claims it has been read to confirm.
+**Phase 02.3 primary extraction (2026-09-03) is DONE** — 35 artifacts read/
+cross-referenced; ~48 claims `PRIMARY_VERIFIED`, 13 `CORRECTED`, 12
+`PRIMARY_PARTIAL`, 7 `PRIMARY_NOT_FOUND_IN_PRIMARY_CORPUS`. See
+`claim-registry.md`, `extraction-report.md`, `reconciliation-report.md`. Per-SPD
+`Extraction state` is below. "Supports" in the main table lists the claims each
+artifact bears on.
 
 ### Secret-review history
 
@@ -77,6 +79,51 @@ Every SPD carries one of: `COMMITTED_OR_READY` (in the repo now) · `SANITIZED`
 | `COMMITTED_OR_READY` | SPD-001 … SPD-035 (all) | 35 |
 | `SANITIZED` | *(none)* | 0 |
 | `HELD` | *(none)* | 0 |
+
+## Extraction state (Phase 02.3 primary extraction — brief §12)
+
+`EXTRACTED` = read in full, implementation-critical facts pulled into
+`extraction-report.md` / `claim-registry.md`. `PARTIALLY_EXTRACTED` =
+cross-referenced (same page family) or skimmed. `NO_IMPLEMENTATION_CLAIMS` =
+read, nothing listing-contract-critical.
+
+| SPD | Extraction state | Feeds claims |
+|---|---|---|
+| SPD-001 authentication | `EXTRACTED` | SCL-001…006, SCL-014 |
+| SPD-002 develop-an-integration | `PARTIALLY_EXTRACTED` | SCL-010 (journey overview) |
+| SPD-003 create-a-login | `EXTRACTED` | SCL-010, SCL-012 |
+| SPD-004 create-developer-account | `EXTRACTED` | SCL-010, SCL-011, SCL-012 |
+| SPD-005 create-your-app | `EXTRACTED` | SCL-012, SCL-014 |
+| SPD-006 authorize-your-first-shop | `EXTRACTED` | SCL-001, SCL-002 (365-day note) |
+| SPD-007 make-your-first-api-call | `EXTRACTED` | SCL-014 (permission model), SCL-003 |
+| SPD-008 sandbox-testing | `EXTRACTED` | SCL-013 |
+| SPD-009 publish-your-app-go-live | `EXTRACTED` | SCL-012 (Go-Live review) |
+| SPD-010 add-item | `EXTRACTED` | SCL-020…023, SCL-041, SCL-042, SCL-062, SCL-070, SCL-071, SCL-102, SCL-110, SCL-111, SCL-122 |
+| SPD-011 get-item-base-info | `EXTRACTED` | SCL-024, SCL-025, SCL-026, SCL-027, SCL-033, SCL-092, SCL-141, SCL-142 |
+| SPD-012 update-item | `PARTIALLY_EXTRACTED` | SCL-023, SCL-028 (page family = add_item) |
+| SPD-013 unlist-item | `PARTIALLY_EXTRACTED` | SCL-027 |
+| SPD-014 delete-item | `PARTIALLY_EXTRACTED` | SCL-027 |
+| SPD-015 init-tier-variation | `EXTRACTED` | SCL-030, SCL-032, SCL-034, SCL-035, SCL-093 |
+| SPD-016 update-tier-variation | `PARTIALLY_EXTRACTED` | SCL-031, SCL-141 |
+| SPD-017 add-model | `EXTRACTED` | SCL-030, SCL-070 |
+| SPD-018 update-model | `PARTIALLY_EXTRACTED` | SCL-031 |
+| SPD-019 delete-model | `PARTIALLY_EXTRACTED` | SCL-031 |
+| SPD-020 get-model-list | `EXTRACTED` | SCL-031, SCL-032, SCL-070, SCL-082, SCL-092 |
+| SPD-021 get-category | `EXTRACTED` | SCL-040, SCL-041, SCL-042 |
+| SPD-022 category-recommend | `EXTRACTED` | SCL-040 |
+| SPD-023 get-attribute-tree | `EXTRACTED` | SCL-050, SCL-052, SCL-053, SCL-054 |
+| SPD-024 get-recommend-attribute | `PARTIALLY_EXTRACTED` | SCL-051 |
+| SPD-025 get-brand-list | `EXTRACTED` | SCL-060, SCL-061, SCL-062 |
+| SPD-026 register-brand | `EXTRACTED` | SCL-063, SCL-064 |
+| SPD-027 update-price | `EXTRACTED` | SCL-080, SCL-082, SCL-132 |
+| SPD-028 update-stock | `EXTRACTED` | SCL-090, SCL-091, SCL-093, SCL-094, SCL-101(tax), SCL-132 |
+| SPD-029 get-item-limit | `EXTRACTED` | SCL-081, SCL-101, SCL-102, SCL-111, SCL-120, SCL-121, SCL-122, SCL-123 |
+| SPD-030 push-notifications-webhooks | `NO_IMPLEMENTATION_CLAIMS` | — (webhook mechanism; not listing-contract) |
+| SPD-031 sensitive-data | `PARTIALLY_EXTRACTED` | — (IP-whitelist gate for order buyer data; not listing) |
+| SPD-032 faq | `NO_IMPLEMENTATION_CLAIMS` | — |
+| SPD-033 best-practices-before-opening-a-ticket | `NO_IMPLEMENTATION_CLAIMS` | — |
+| SPD-034 references | `NO_IMPLEMENTATION_CLAIMS` | — |
+| SPD-035 br-spi-app-creation-user-guide | `EXTRACTED` | SCL-012 (SPI-App whitelist ≠ general Product API) |
 
 ## Registry
 
