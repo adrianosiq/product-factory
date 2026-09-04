@@ -1,14 +1,30 @@
 # Inventory — CONSERVATIVE (major discovery gap)
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 phase_02_2_reviewed: 2026-08-30
 volatile: true
-classification: OFFICIAL (level) — verification SEARCH_INDEXED; the BR stock/warehouse model is UNRESOLVED
+classification: OFFICIAL (level) — write contract PRIMARY_VERIFIED (SPD-028); `get_warehouse_detail` page still PRIMARY_NOT_FOUND
+phase_02_3_note: >-
+  PRIMARY (SPD-028 update_stock, SPD-015, SPD-011, SPD-020). `POST /api/v2/product/update_stock`;
+  one `item_id` per call; `stock_list[]` (**length 1–50**) `{model_id (0 = no
+  model item), seller_stock:[{location_id (optional), stock}]}`. **Writes only
+  `seller_stock`; the value is ABSOLUTE** ("new stock info"); `normal_stock` was
+  offlined 2022-10-31. **Multi-warehouse IS supported**: `location_id` comes from
+  **`v2.shop.get_warehouse_detail`** (page NOT in corpus); omit it when the shop
+  has no warehouse; **cannot mix** stock structures (all with `location_id` or
+  all without). WMS shops blocked (`error_wms_shop_block_upate_stock`); FBS/B2C:
+  normal stock must = 0. Reads: `stock_info_v2 {summary_info{total_reserved_stock,
+  total_available_stock}, seller_stock[{location_id, stock, if_saleable}],
+  shopee_stock[...], advance_stock{...}}`. Do **not** import Multi Origem — this
+  is Shopee's own model.
 phase_02_2_note: >-
-  `product/update_stock` (`item_id`, `stock_list`) corroborated; `stock_list`
-  entries carry `model_id` when models exist. No location/warehouse dimension was
-  observed in triangulation — but absence in a summary is not proof. State stays
-  "inventory object partially verified; warehouse topology UNRESOLVED". See
+  HISTORICAL (superseded by phase_02_3_note above). Phase 02.2 saw no
+  location/warehouse dimension in triangulation. Phase 02.3 (SPD-028) resolved
+  the write contract: `update_stock` writes **`seller_stock` absolutely**;
+  **multi-warehouse IS supported** via `location_id` (from
+  `v2.shop.get_warehouse_detail`, page NOT in the corpus); cannot mix stock
+  structures; WMS shops blocked; FBS/B2C normal stock = 0. See
   `phase-02.2-report.md` §19–§20.
 
 ## 1. Why this file stays minimal
@@ -20,22 +36,27 @@ intentionally states little and locks nothing.
 
 | Aspect | Finding | Status |
 |---|---|---|
-| Level | stock appears **model-level** where variations / models exist; item-level otherwise | `SEARCH_INDEXED`, MEDIUM |
-| Update | `update_stock` (+ batch); `update_model` for a model's stock | `SEARCH_INDEXED` |
-| Reserved vs available | Shopee tracks reserved vs sellable internally; the seller writes the sellable figure | `SEARCH_INDEXED` |
+| Level | stock is **model-level** where models exist (`model_id` per `stock_list` entry; `model_id = 0` = no-model item) | `PRIMARY_VERIFIED` (SPD-028) |
+| Update | `POST /api/v2/product/update_stock`, one `item_id` per call, `stock_list[]` 1–50 | `PRIMARY_VERIFIED` (SPD-028) |
+| Reserved vs available | reads expose `total_reserved_stock` / `total_available_stock`; the seller writes only `seller_stock` | `PRIMARY_VERIFIED` (SPD-028) |
 | Fulfilment stock | inventory in Shopee's DCs / "Envios Shopee" is **not** freely seller-writable via `update_stock` | `SEARCH_INDEXED` |
 
-## 3. What is UNVERIFIED (do not assume)
+## 3. Resolved in Phase 02.3 (SPD-028) — and what is still open
 
-- the exact **stock endpoint** shape (`stock_info_v2` / `seller_stock` /
-  `shop_stock` — names only),
-- **warehouse semantics** — whether BR uses a single seller pool or a
-  multi-warehouse `location_id` dimension,
-- **available vs reserved** field names / structure,
-- **multi-warehouse support** for BR at all,
-- **absolute vs incremental** update semantics for `update_stock`,
-- **concurrency behaviour** — no optimistic-lock / version token found;
-  last-write-wins assumed but unconfirmed.
+**Resolved (`PRIMARY_VERIFIED`):** `update_stock` write shape (`stock_list[]`
+1–50, `{model_id (0 = no model), seller_stock:[{location_id?, stock}]}`); the
+write is **absolute** ("new stock info"); `normal_stock` offlined 2022-10-31;
+reads return `stock_info_v2` (`summary_info{total_reserved_stock,
+total_available_stock}`, `seller_stock[{location_id, stock, if_saleable}]`,
+`shopee_stock[…]`, `advance_stock` PH/VN/ID/MY only); **multi-warehouse is
+supported** via `location_id`; cannot mix stock structures; WMS shops blocked
+(`error_wms_shop_block_upate_stock`); FBS/B2C normal stock = 0; no optimistic-lock
+token (per-model `failure_list` / `success_list`; "Total stock must be more than
+reserved stock").
+
+**Still open (`PRIMARY_NOT_FOUND`):** the `v2.shop.get_warehouse_detail` page
+that yields `location_id`; whether a given BR shop actually has a multi-warehouse
+topology (an account capability to resolve, not a default).
 
 ## 4. Phase-02 safe default
 

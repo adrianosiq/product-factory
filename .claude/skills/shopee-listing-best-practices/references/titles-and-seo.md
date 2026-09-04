@@ -1,18 +1,29 @@
 # Titles & SEO
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 volatile: true
 classification: mixed — see per-rule tags; title length is DYNAMIC and NOT locked
+phase_02_3_note: >-
+  PRIMARY (SPD-029 get_item_limit, SPD-010 add_item). Title = `item_name`.
+  **Length limit is `get_item_limit.item_name_length_limit {min_limit,
+  max_limit}`** — per shop+category, DYNAMIC. The prior ≈255/256 fixed guess has
+  **no primary basis and is superseded** by this dynamic source — never assume a
+  fixed value; the doc **sample** is min 5 / max 100 (a sample, not a constant).
+  Primary errors: `error_title_exceeds_max_length`,
+  `error_item_name_is_too_short`, `error_title_character_forbidden`,
+  `error_name_length_limit`, `error_item_name_empty`. SEO/ranking claims stay
+  EXPERIMENTAL (not in the corpus); `get_item_base_info.deboost` is a real
+  "search ranking lowered" flag. See `research/shopee-primary-docs/`.
 
 ## 1. Title — four separate layers (keep them apart)
 
-### A. OFFICIAL hard constraints (verification `SEARCH_INDEXED`, `⚠ verify`)
+### A. OFFICIAL hard constraints
 
-| Rule | Discovery value | Status |
+| Rule | Resolution | Status |
 |---|---|---|
-| Max `item_name` length | ≈ **255–256** characters (BR) | **DYNAMIC — resolve via `get_item_limit`. NOT an enforced constant.** `SEARCH_INDEXED`, MEDIUM. Do not use the ~60/120 of older SEA markets. |
-| Min length | ≈ 10–25 chars (varies by source) | `UNVERIFIED` — `DYNAMIC` |
-| Prohibited characters | no special characters; no leading / trailing spaces | OFFICIAL, `SEARCH_INDEXED` |
+| Max / min `item_name` length | **`get_item_limit.item_name_length_limit {min_limit, max_limit}`** — per shop+category, resolve at listing time | **`PRIMARY_VERIFIED` source** (SPD-029). The prior ≈255/256 fixed guess has **no primary basis** and is superseded; doc **sample** min 5 / max 100 (a sample, not a constant). Do not use the ~60/120 of older SEA markets. |
+| Prohibited characters | no special characters; no leading / trailing spaces (`error_title_character_forbidden`) | OFFICIAL, `SEARCH_INDEXED` |
 
 Enforcement note: until `resolve_title_limit` is executed, an over-length title
 is `PUBLICATION_STATUS = REVIEW` (check pending), **not** `FAIL`. Only a resolved

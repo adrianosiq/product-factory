@@ -1,18 +1,30 @@
 # Product / listing structure — Shop / Item / Tier Variation / Model
 
 last_reviewed: 2026-08-28
+phase_02_3_reviewed: 2026-09-03
 phase_02_2_reviewed: 2026-08-30
 volatile: true
-classification: OFFICIAL (structure) — verification SEARCH_INDEXED; every API-contract detail `⚠ verify`
+classification: OFFICIAL (structure) — entity spine PRIMARY_VERIFIED (SPD-010/011/015/020); detail not covered by a primary page stays `⚠ verify`
+phase_02_3_note: >-
+  PRIMARY (SPD-010, SPD-011, SPD-015, SPD-020). Entity spine Shop → Item → Tier
+  Variation → Model is **PRIMARY_VERIFIED**. `add_item` returns `item_id`
+  (int64). `get_item_base_info` takes **`item_id_list` limit [0,50]** — no
+  `product_id` request parameter exists in the primary corpus (drop the
+  cross-border-alias worry). NEW: `get_item_base_info` returns **`ssp_id` =
+  "Shopee Standard Product"** id — a catalogue-like node (relates to gap G6) —
+  and `tag.kit` (bool). **`model_id = 0` = "no model item"**; Shopee keeps an
+  internal **default model** for no-variation items (no separate hidden id is
+  exposed). `item_status` ∈ `NORMAL` / `BANNED` / `UNLIST` / `SELLER_DELETE` /
+  `SHOPEE_DELETE` / `REVIEWING`. Persist `shop_id` / `item_id` / `model_id` /
+  `brand_id` / `image_id` / `video_upload_id`; write internal SKU into `item_sku`
+  / `model_sku` (≤ 100 chars).
 phase_02_2_note: >-
-  Entity spine Shop → Item → Tier Variation → Model is a corroborated API
-  contract candidate (`SEARCH_INDEXED` · MEDIUM · MULTI_SOURCE; non-primary — not
-  locked). The persisted listing id is `item_id`; `get_item_base_info` takes
-  `item_id_list` (S13 says ≤ 50 — SINGLE_SOURCE, provisional). One integrator
-  page names a read arg `product_id` — its scope is `UNRESOLVED` (local alias vs
-  `v2.global_product.*` / cross-border); do not treat it as a second local
-  identity. Models are created by a separate call (`init_tier_variation` /
-  `add_model`) after `add_item`. See
+  HISTORICAL (superseded by phase_02_3_note above). Entity spine Shop → Item →
+  Tier Variation → Model was then a `SEARCH_INDEXED` candidate; Phase 02.3
+  (SPD-010/011/015/020) made it `PRIMARY_VERIFIED`. `get_item_base_info.item_id_list`
+  limit is now confirmed **[0, 50]**. No `product_id` request parameter exists in
+  the primary corpus (`PRIMARY_NOT_FOUND` as a local param). Models are created
+  by a separate call (`init_tier_variation` / `add_model`) after `add_item`. See
   `research/shopee-api-contract/phase-02.2-report.md` §8–§10, §13.
 
 ## 1. The entity model (current best understanding)
@@ -20,10 +32,10 @@ phase_02_2_note: >-
 ```
 Shop  (shop_id)                                   — the seller storefront, region BR
  └── Item  (item_id)                              — THE LISTING
-      │     item_sku    seller-set, mutable       — seller-side listing identity
-      │     item_status NORMAL | UNLIST | BANNED | DELETED  (REVIEWING? — `⚠ verify`)
+      │     item_sku    seller-set (parent SKU)   — seller-side listing identity
+      │     item_status NORMAL | BANNED | UNLIST | SELLER_DELETE | SHOPEE_DELETE | REVIEWING
       ├── Tier Variation                          — the variation axes
-      │     • ≤ 2 tiers (corroborated across SDKs; cap `⚠ verify` for BR)
+      │     • 0, 1, or 2 tiers — max 2 is PRIMARY_VERIFIED (SPD-015)
       │     • positional — no id; an ordered option_list per tier
       │     • tier-1 options may each carry one image
       └── Model  (model_id)                       — THE SELLABLE VARIANT
@@ -32,21 +44,22 @@ Shop  (shop_id)                                   — the seller storefront, reg
             price, stock per model
 ```
 
-For an item with **no** variation, Product Factory maps its internal sellable
-unit to the `item_id` (+ `item_sku`). **Whether Shopee itself keeps a hidden
-default / internal Model for a no-variation item is `UNRESOLVED`** (no endpoint
-or field observed that exposes one) — do not collapse this ambiguity until a
-primary schema settles it. Product Factory keeps its own sellable-unit identity
-either way.
+For an item with **no** variation, per-model price/stock operations use the
+**`model_id = 0` "no model item" addressing convention** (`PRIMARY_VERIFIED`,
+SPD-016/027/028). Whether Shopee exposes a fully queryable default-model *entity*
+for every such item across every API is inferred from a single FBS-context phrase
+("only has a default model") and is **`PRIMARY_PARTIAL`** — do not overstate it.
+Product Factory maps `variant_id → (item_id, model_id = 0)` and keeps its own
+sellable-unit identity either way.
 
-Terminology (Phase 02.2, `SEARCH_INDEXED` · MEDIUM · MULTI_SOURCE): **the id
-Product Factory persists is `item_id`** — Shopee-assigned by `add_item`.
-`get_item_base_info` takes `item_id_list` (S13 says ≤ 50 per call — SINGLE_SOURCE,
-treat as provisional, not a locked constant). One integrator page (S14) names the
-argument `product_id`; **whether `product_id` is a local alias for `item_id` or a
-`v2.global_product.*` / cross-border / SIP concept is `UNRESOLVED`** — it is
-**not** a second local listing identity. "model" is the v2 word; older v1
-material says "variation".
+Terminology (Phase 02.3, `PRIMARY_VERIFIED`): **the id Product Factory persists
+is `item_id`** — Shopee-assigned by `add_item` (int64). `get_item_base_info`
+takes `item_id_list`, limit **[0, 50]** per call (SPD-011). **No `product_id`
+request parameter exists in the primary corpus** — the integrator-page
+`product_id` is `PRIMARY_NOT_FOUND` as a local param and is **not** a second
+local listing identity. `get_item_base_info` also returns **`ssp_id`** (Shopee
+Standard Product, a catalogue-like node — SKILL.md gap G6). "model" is the v2
+word; older v1 material says "variation".
 
 Scope separation:
 - `v2.product.*` — local marketplace listing / product operations (the BR
@@ -61,9 +74,9 @@ Scope separation:
 | Entity | Meaning | Shopee id | Assigned by | Stable? | Buyer-visible? | Product Factory mapping | Verification |
 |---|---|---|---|---|---|---|---|
 | Shop | seller storefront on Shopee BR | `shop_id` | Shopee | yes | no | account / shop mapping | `SEARCH_INDEXED` |
-| Item | the listing | `item_id` | Shopee (on create) | yes (life of listing) | in URL | 1 ProductMaster → 1 Item per shop | `SEARCH_INDEXED`; contract `⚠ verify` |
-| Tier Variation | the item's variation axes | none (positional) | seller-defined | mutable pre-sales; restricted after | option names yes | internal variation axes | `SEARCH_INDEXED`; caps `⚠ verify` |
-| Model | one sellable combination of tier options | `model_id` (+ `tier_index[]`) | Shopee (on `add_model` / `init_tier_variation`) | yes (life of model) | no | internal `variant_id` / SKU ↔ `model_id` | `SEARCH_INDEXED`; contract `⚠ verify` |
+| Item | the listing | `item_id` (int64) | Shopee (on create) | yes (life of listing) | in URL | 1 ProductMaster → 1 Item per shop | `PRIMARY_VERIFIED` (SPD-010) |
+| Tier Variation | the item's variation axes | none (positional) | seller-defined | 0–2 tiers; structure change LOCKED under promotion | option names yes | internal variation axes | `PRIMARY_VERIFIED` (SPD-015); name-length caps DYNAMIC |
+| Model | one sellable combination of tier options | `model_id` (+ `tier_index[]`); `model_id = 0` = no-model | Shopee (on `add_model` / `init_tier_variation`) | yes (life of model) | no | internal `variant_id` / SKU ↔ `model_id` | `PRIMARY_VERIFIED` (SPD-015/020) |
 | `item_sku` / `model_sku` | seller-controlled identity string | value only | seller / Product Factory | mutable | mostly no (`⚠ verify`) | store the internal SKU here | `SEARCH_INDEXED` |
 | Brand | brand attribute value | `brand_id` | Shopee / seller+approval | stable | yes (as name) | — | `SEARCH_INDEXED` |
 | Category | leaf category | `category_id` | Shopee | stable-ish (tree changes) | breadcrumb | 1 Item → 1 leaf | `SEARCH_INDEXED` |
@@ -85,29 +98,36 @@ Scope separation:
 - A Shopee listing is a **projection** of the product. It is never a source of
   `ProductMaster` truth.
 
-## 4. Item-level fields (reconstructed — names `SEARCH_INDEXED`, requiredness `UNVERIFIED`)
+## 4. Item-level fields
 
-`item_name`, `description` (+ `description_type` `normal` | `extended`),
-`category_id`, `brand` (`{ brand_id, original_brand_name }`), `attribute_list`,
-`image` (`{ image_id_list }`), `video_upload_id`, `weight` (kg), `dimension`
-(`{ package_length, package_width, package_height }` cm), `logistic_info`,
-`condition` (`NEW` | `USED`), `pre_order` (`{ is_pre_order, days_to_ship }`),
-`item_sku`, `item_status`, stock / `seller_stock`, `price`, `tax_info` / fiscal
-fields (BR — `UNVERIFIED`), `wholesale` tiers, dangerous-goods flag
-(`UNVERIFIED`). Treat every field name as provisional until the portal is read.
+The `add_item` required / optional field set is `PRIMARY_VERIFIED` (SPD-010) —
+see `references/api-and-auth.md` §0 and claim-registry `SCL-021` / `SCL-022` for
+the authoritative list. In outline: `item_name`, `description`
+(+ `description_type` `normal` | `extended` — extended = whitelist), `category_id`,
+`brand` (`{ brand_id, original_brand_name }` — always required),
+`attribute_list` (must cover all `mandatory`), `image` (`{ image_id_list }`),
+`video_upload_id` (one), `weight` (KG, required), `dimension`
+(`{ package_length, package_width, package_height }` cm), `logistic_info`
+(`{ logistic_id, enabled, … }`), `condition` (`NEW` | `USED`),
+`pre_order` (`{ is_pre_order, days_to_ship }`), `item_sku`, `item_status`
+(`UNLIST` | `NORMAL`), `seller_stock`, `original_price`, `gtin_code`
+(model-level; BR + TW), `tax_info` + `export_cfop` (BR), `wholesale` tiers,
+`item_dangerous` (ID/MY only). `update_item`'s full field list is
+`PRIMARY_NOT_FOUND` — treat it as `⚠ verify`.
 
 ## 5. Listing lifecycle
 
-`item_status` — **provisional set, not re-verified in Phase 02.2** (`STILL_UNVERIFIED`):
-`NORMAL` (live), `UNLIST` (hidden / not for sale — seller-toggled), `BANNED`
-(removed by Shopee for a violation), `DELETED` (removed by seller or system). A
-`REVIEWING` / under-review state appears in some responses — `UNVERIFIED`.
-Draft-via-API — `UNVERIFIED`.
+`item_status` enum (**`PRIMARY_VERIFIED`**, SPD-011): `NORMAL` (live), `UNLIST`
+(hidden / not for sale — seller-toggled), `BANNED` (removed by Shopee for a
+violation), `SELLER_DELETE` / `SHOPEE_DELETE` (deleted by seller / by Shopee —
+distinct states; there is **no** plain `DELETED`), `REVIEWING` (pending
+moderation). `add_item` accepts `UNLIST` | `NORMAL`; a draft via API =
+`UNLIST` + `scheduled_publish_time` (SPD-010).
 
-Provisional state model: `NOT_CREATED → (create) → [REVIEWING?] → NORMAL ⇄
-UNLIST`, with `BANNED` / `DELETED` as terminal-ish. Whether edits re-trigger
-review — `⚠ verify`. Full graph and enforcement in
-`references/moderation-and-enforcement.md`.
+State model: `NOT_CREATED → (create) → [REVIEWING] → NORMAL ⇄ UNLIST`, with
+`BANNED` / `SELLER_DELETE` / `SHOPEE_DELETE` terminal-ish. Whether an edit
+re-triggers `REVIEWING` is **`PRIMARY_NOT_FOUND`** (not stated in the corpus).
+Full graph and enforcement in `references/moderation-and-enforcement.md`.
 
 ## 6. NOT part of this model (Mercado Livre concepts — do not import)
 
@@ -119,8 +139,9 @@ review — `⚠ verify`. Full graph and enforcement in
 The model **is** the sellable unit and belongs to one item — there is no
 ML-style "what is sold" entity separate from the listing. Tier axes are
 seller-declared and positional, not derived from attribute metadata tags.
-Whether Shopee BR has any catalogue / "produto" grouping concept is
-**UNRESOLVED** (SKILL.md gap G6) — assume every listing is standalone.
+Whether Shopee BR has a full catalogue / "produto" grouping concept is only
+**partially** resolved (SKILL.md gap G6 — `get_item_base_info` returns `ssp_id`,
+a catalogue-like node; no Buy-Box evidence) — assume every listing is standalone.
 
 ## Sources
 
@@ -129,8 +150,9 @@ Whether Shopee BR has any catalogue / "produto" grouping concept is
   (`docs/managers/product.md`), `rollout.com` — community SDK / external —
   consulted 2026-08-28 — `SEARCH_INDEXED` · MEDIUM · MULTI_SOURCE (non-primary
   contract candidate); `phase-02.2-report.md` §8–§10, §13, §29 (C7).
-  `product_id` scope `UNRESOLVED`; `item_id_list ≤ 50` SINGLE_SOURCE / provisional;
-  `item_status` enum values **not** re-verified — `STILL_UNVERIFIED`.
+  (Phase 02.3 superseded these: no `product_id` request param exists in the
+  corpus; `item_id_list` limit confirmed **[0, 50]**; `item_status` enum
+  `PRIMARY_VERIFIED` — SPD-011.)
 - v2 endpoint names & `item_status` enum — `github.com/wjp-letgo/shopeego` —
   community SDK — consulted 2026-08-28 — `SEARCH_INDEXED`.
 - v1 field names, `tier_index` combination semantics — `github.com/teacat/shopeego`
